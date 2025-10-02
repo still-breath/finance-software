@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from api.client import APIClient
 from utils.logger import log_user_action, log_app_event, log_window_event
+from ui.transactions import TransactionListWidget
 
 class DashboardWindow(QMainWindow):
     """Main dashboard window"""
@@ -224,24 +225,10 @@ class DashboardWindow(QMainWindow):
         """Create transactions page"""
         page = QWidget()
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(10, 10, 10, 10)
         
-        title = QLabel('Transactions')
-        title_font = QFont()
-        title_font.setPointSize(20)
-        title_font.setBold(True)
-        title.setFont(title_font)
-        layout.addWidget(title)
-        
-        # Add transaction button
-        add_btn = QPushButton('Add Transaction')
-        add_btn.setMaximumWidth(150)
-        add_btn.clicked.connect(self.add_transaction)
-        layout.addWidget(add_btn)
-        
-        # Transactions list
-        self.transactions_list = QListWidget()
-        self.transactions_list.addItem('Loading transactions...')
-        layout.addWidget(self.transactions_list)
+        self.transaction_widget = TransactionListWidget(self.api_client)
+        layout.addWidget(self.transaction_widget)
         
         return page
     
@@ -412,14 +399,7 @@ class DashboardWindow(QMainWindow):
             self.transactions_list.clear()
             self.transactions_list.addItem(f'Error loading transactions: {str(e)}')
     
-    def add_transaction(self):
-        """Add new transaction (placeholder)"""
-        log_user_action("add_transaction_clicked", "DashboardWindow")
-        QMessageBox.information(
-            self,
-            'Add Transaction',
-            'Transaction form will be implemented in the next iteration.'
-        )
+
     
     def logout(self):
         """Handle logout"""
