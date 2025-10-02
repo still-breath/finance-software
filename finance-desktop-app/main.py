@@ -143,8 +143,8 @@ class MainWindow(QWidget):
         log_window_event("DashboardWindow", "opened")
         
         # Hide main window
-        self.hide()
-        log_window_event("MainWindow", "hidden")
+        # self.hide()
+        # log_window_event("MainWindow", "hidden")
     
     def on_registration_success(self, result):
         """Handle successful registration"""

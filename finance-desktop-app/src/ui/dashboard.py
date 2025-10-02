@@ -227,8 +227,18 @@ class DashboardWindow(QMainWindow):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(10, 10, 10, 10)
         
-        self.transaction_widget = TransactionListWidget(self.api_client)
-        layout.addWidget(self.transaction_widget)
+        try:
+            self.transaction_widget = TransactionListWidget(self.api_client)
+            layout.addWidget(self.transaction_widget)
+        except Exception as e:
+            log_app_event("transaction_widget_error", "DashboardWindow", {"error": str(e)})
+            error_label = QLabel(f"Transaction widget failed to load: {str(e)}")
+            error_label.setWordWrap(True)
+            layout.addWidget(error_label)
+            
+            placeholder_label = QLabel("Transactions feature temporarily unavailable")
+            placeholder_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(placeholder_label)
         
         return page
     
