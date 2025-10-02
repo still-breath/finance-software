@@ -1,0 +1,21 @@
+Flask==3.0.0
+Flask-CORS==4.0.0
+Werkzeug==3.0.1
+gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# Machine Learning dependencies
+scikit-learn>=1.7.2
+pandas==2.1.4
+numpy==1.26.2
+
+# Optional: For database connections (if needed)
+# psycopg2-binary==2.9.9
+# SQLAlchemy==2.0.23
+
+# Optional: For API documentation
+# flask-restx==1.3.0
+
+# Development dependencies
+# pytest==7.4.3
+# pytest-flask==1.3.0
