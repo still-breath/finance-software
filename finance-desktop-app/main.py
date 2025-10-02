@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from api.client import APIClient
 from ui.auth import LoginDialog, RegisterDialog
+from ui.dashboard import DashboardWindow
 
 class MainWindow(QWidget):
     """Main application window"""
@@ -124,11 +125,13 @@ class MainWindow(QWidget):
     def on_login_success(self, result):
         """Handle successful login"""
         self.current_user = result.get('user', {})
-        QMessageBox.information(
-            self,
-            'Login Successful',
-            f'Welcome back, {self.current_user.get("name", "User")}!\n\nDashboard will be implemented in the next iteration.'
-        )
+        
+        # Open dashboard window
+        self.dashboard = DashboardWindow(self.api_client, self.current_user, self)
+        self.dashboard.logout_requested.connect(self.on_logout)
+        self.dashboard.show()
+        
+        self.hide()
     
     def on_registration_success(self, result):
         """Handle successful registration"""
@@ -137,6 +140,11 @@ class MainWindow(QWidget):
             'Registration Successful',
             'Account created successfully!\nYou can now login with your credentials.'
         )
+    
+    def on_logout(self):
+        """Handle logout from dashboard"""
+        self.current_user = None
+        self.show()
 
 def main():
     """Main application function"""
