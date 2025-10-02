@@ -33,15 +33,14 @@ class AuthWorker(QThread):
         try:
             if self.operation == 'login':
                 result = self.api_client.login(
-                    self.kwargs['email'], 
+                    self.kwargs['username'], 
                     self.kwargs['password']
                 )
                 self.success.emit(result)
             elif self.operation == 'register':
                 result = self.api_client.register(
-                    self.kwargs['email'], 
-                    self.kwargs['password'],
-                    self.kwargs['name']
+                    self.kwargs['username'], 
+                    self.kwargs['password']
                 )
                 self.success.emit(result)
         except Exception as e:
@@ -79,10 +78,10 @@ class LoginDialog(QDialog):
         # Form layout
         form_layout = QFormLayout()
         
-        # Email field
-        self.email_edit = QLineEdit()
-        self.email_edit.setPlaceholderText('Enter your email')
-        form_layout.addRow('Email:', self.email_edit)
+        # Username field
+        self.username_edit = QLineEdit()
+        self.username_edit.setPlaceholderText('Enter your username')
+        form_layout.addRow('Username:', self.username_edit)
         
         # Password field
         self.password_edit = QLineEdit()
@@ -176,36 +175,35 @@ class LoginDialog(QDialog):
         """Handle login button click"""
         log_user_action("login_attempt", "LoginDialog")
         
-        email = self.email_edit.text().strip()
-        password = self.password_edit.text()
+        username = self.username_edit.text().strip()
+        password = self.password_edit.text().strip()
         
-        # Validation
-        if not email:
-            log_validation_error("LoginDialog", "email", "empty email")
-            QMessageBox.warning(self, 'Validation Error', 'Please enter your email')
-            self.email_edit.setFocus()
+        # Basic validation
+        if not username:
+            log_validation_error("LoginDialog", "username", "empty username")
+            QMessageBox.warning(self, 'Validation Error', 'Please enter your username')
+            self.username_edit.setFocus()
             return
-        
+            
         if not password:
             log_validation_error("LoginDialog", "password", "empty password")
             QMessageBox.warning(self, 'Validation Error', 'Please enter your password')
             self.password_edit.setFocus()
             return
-        
-        # Validate email format
-        if '@' not in email:
-            log_validation_error("LoginDialog", "email", "invalid email format")
-            QMessageBox.warning(self, 'Validation Error', 'Please enter a valid email address')
-            self.email_edit.setFocus()
+
+        if len(username) < 3:
+            log_validation_error("LoginDialog", "username", "username too short")
+            QMessageBox.warning(self, 'Validation Error', 'Username must be at least 3 characters long')
+            self.username_edit.setFocus()
             return
         
-        log_user_action("login_validation_passed", "LoginDialog", {"email": email})
+        log_user_action("login_validation_passed", "LoginDialog", {"username": username})
         
         # Show progress and disable buttons
         self.set_loading(True)
         
         # Start authentication in background thread
-        self.auth_worker = AuthWorker(self.api_client, 'login', email=email, password=password)
+        self.auth_worker = AuthWorker(self.api_client, 'login', username=username, password=password)
         self.auth_worker.success.connect(self.on_login_success)
         self.auth_worker.error.connect(self.on_login_error)
         self.auth_worker.start()
@@ -242,7 +240,7 @@ class LoginDialog(QDialog):
             self.progress_bar.setRange(0, 0)  # Indeterminate progress
         
         # Disable/enable form elements
-        self.email_edit.setEnabled(not loading)
+        self.username_edit.setEnabled(not loading)
         self.password_edit.setEnabled(not loading)
         self.login_btn.setEnabled(not loading)
         self.register_btn.setEnabled(not loading)
@@ -280,15 +278,10 @@ class RegisterDialog(QDialog):
         # Form layout
         form_layout = QFormLayout()
         
-        # Name field
-        self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText('Enter your full name')
-        form_layout.addRow('Full Name:', self.name_edit)
-        
-        # Email field
-        self.email_edit = QLineEdit()
-        self.email_edit.setPlaceholderText('Enter your email')
-        form_layout.addRow('Email:', self.email_edit)
+        # Username field
+        self.username_edit = QLineEdit()
+        self.username_edit.setPlaceholderText('Enter your username')
+        form_layout.addRow('Username:', self.username_edit)
         
         # Password field
         self.password_edit = QLineEdit()
@@ -370,25 +363,19 @@ class RegisterDialog(QDialog):
     
     def register(self):
         """Handle registration button click"""
-        name = self.name_edit.text().strip()
-        email = self.email_edit.text().strip()
+        username = self.username_edit.text().strip()
         password = self.password_edit.text()
         confirm_password = self.confirm_password_edit.text()
         
         # Validation
-        if not name:
-            QMessageBox.warning(self, 'Validation Error', 'Please enter your full name')
-            self.name_edit.setFocus()
+        if not username:
+            QMessageBox.warning(self, 'Validation Error', 'Please enter your username')
+            self.username_edit.setFocus()
             return
         
-        if not email:
-            QMessageBox.warning(self, 'Validation Error', 'Please enter your email')
-            self.email_edit.setFocus()
-            return
-        
-        if '@' not in email:
-            QMessageBox.warning(self, 'Validation Error', 'Please enter a valid email address')
-            self.email_edit.setFocus()
+        if len(username) < 3:
+            QMessageBox.warning(self, 'Validation Error', 'Username must be at least 3 characters long')
+            self.username_edit.setFocus()
             return
         
         if not password:
@@ -411,7 +398,7 @@ class RegisterDialog(QDialog):
         
         # Start registration in background thread
         self.auth_worker = AuthWorker(self.api_client, 'register', 
-                                    name=name, email=email, password=password)
+                                    username=username, password=password)
         self.auth_worker.success.connect(self.on_register_success)
         self.auth_worker.error.connect(self.on_register_error)
         self.auth_worker.start()
@@ -434,8 +421,7 @@ class RegisterDialog(QDialog):
             self.progress_bar.setRange(0, 0)  # Indeterminate progress
         
         # Disable/enable form elements
-        self.name_edit.setEnabled(not loading)
-        self.email_edit.setEnabled(not loading)
+        self.username_edit.setEnabled(not loading)
         self.password_edit.setEnabled(not loading)
         self.confirm_password_edit.setEnabled(not loading)
         self.register_btn.setEnabled(not loading)

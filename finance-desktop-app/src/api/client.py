@@ -96,35 +96,34 @@ class APIClient:
             log_api_response(method.upper(), endpoint, 0, error=error_msg)
             raise Exception(error_msg)
     
-    def login(self, email: str, password: str) -> Dict[str, Any]:
+    def login(self, username: str, password: str) -> Dict[str, Any]:
         """Login user and store auth token"""
-        log_app_event("login_attempt", "APIClient", {"email": email})
+        log_app_event("login_attempt", "APIClient", {"username": username})
         
         data = {
-            "email": email,
+            "username": username,
             "password": password
         }
         
-        result = self._make_request('POST', '/api/auth/login', data)
+        result = self._make_request('POST', '/api/v1/auth/login', data)
         
         # Store token for future requests
         if 'token' in result:
             self.token = result['token']
-            log_app_event("login_success", "APIClient", {"email": email})
+            log_app_event("login_success", "APIClient", {"username": username})
         else:
-            log_app_event("login_failed", "APIClient", {"email": email, "reason": "no_token_in_response"})
+            log_app_event("login_failed", "APIClient", {"username": username, "reason": "no_token_in_response"})
             
         return result
     
-    def register(self, email: str, password: str, name: str) -> Dict[str, Any]:
+    def register(self, username: str, password: str) -> Dict[str, Any]:
         """Register new user"""
         data = {
-            "email": email,
-            "password": password,
-            "name": name
+            "username": username,
+            "password": password
         }
         
-        return self._make_request('POST', '/api/auth/register', data)
+        return self._make_request('POST', '/api/v1/auth/register', data)
     
     def logout(self):
         """Logout user and clear token"""
@@ -142,19 +141,28 @@ class APIClient:
                 log_app_event("logout_success", "APIClient")
     
     def get_transactions(self) -> Dict[str, Any]:
-        return self._make_request('GET', '/api/transactions')
+        return self._make_request('GET', '/api/v1/transactions')
     
     def create_transaction(self, transaction_data: Dict) -> Dict[str, Any]:
-        return self._make_request('POST', '/api/transactions', transaction_data)
+        return self._make_request('POST', '/api/v1/transactions', transaction_data)
     
     def update_transaction(self, transaction_id: int, transaction_data: Dict) -> Dict[str, Any]:
-        return self._make_request('PUT', f'/api/transactions/{transaction_id}', transaction_data)
+        return self._make_request('PUT', f'/api/v1/transactions/{transaction_id}', transaction_data)
     
     def delete_transaction(self, transaction_id: int) -> Dict[str, Any]:
-        return self._make_request('DELETE', f'/api/transactions/{transaction_id}')
+        return self._make_request('DELETE', f'/api/v1/transactions/{transaction_id}')
     
-    def get_dashboard_data(self) -> Dict[str, Any]:
-        return self._make_request('GET', '/api/dashboard')
+    def get_categories(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/categories')
+    
+    def get_user_profile(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/profile')
+    
+    def recategorize_transaction(self, transaction_id: int) -> Dict[str, Any]:
+        return self._make_request('PUT', f'/api/v1/transactions/{transaction_id}/recategorize')
+    
+    def get_ai_status(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/ai/status')
     
     def is_authenticated(self) -> bool:
         return self.token is not None
