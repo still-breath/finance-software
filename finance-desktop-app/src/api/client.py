@@ -5,8 +5,14 @@ Handles communication with the Go backend server
 
 import requests
 import json
+import time
 from typing import Dict, Any, Optional
 from requests.exceptions import RequestException, ConnectionError, Timeout
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from utils.logger import log_api_request, log_api_response, log_app_event
 
 class APIClient:
     """API client for communicating with finance backend"""
@@ -26,6 +32,10 @@ class APIClient:
                       headers: Optional[Dict] = None) -> Dict[str, Any]:
         """Make HTTP request to backend"""
         url = f"{self.base_url}{endpoint}"
+        start_time = time.time()
+        
+        # Log the request
+        log_api_request(method.upper(), endpoint, data)
         
         # Add auth token if available
         if self.token:
@@ -47,30 +57,49 @@ class APIClient:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
+            # Calculate request duration
+            duration = time.time() - start_time
+            
             # Handle response
-            if response.status_code == 200:
-                return response.json() if response.content else {}
-            elif response.status_code == 201:
-                return response.json() if response.content else {}
+            if response.status_code in [200, 201]:
+                response_data = response.json() if response.content else {}
+                log_api_response(method.upper(), endpoint, response.status_code, response_data)
+                return response_data
             elif response.status_code == 401:
-                raise Exception("Unauthorized - please login again")
+                error_msg = "Unauthorized - please login again"
+                log_api_response(method.upper(), endpoint, response.status_code, error=error_msg)
+                raise Exception(error_msg)
             elif response.status_code == 400:
                 error_data = response.json() if response.content else {}
-                raise Exception(f"Bad request: {error_data.get('error', 'Unknown error')}")
+                error_msg = f"Bad request: {error_data.get('error', 'Unknown error')}"
+                log_api_response(method.upper(), endpoint, response.status_code, error=error_msg)
+                raise Exception(error_msg)
             elif response.status_code == 500:
-                raise Exception("Server error - please try again later")
+                error_msg = "Server error - please try again later"
+                log_api_response(method.upper(), endpoint, response.status_code, error=error_msg)
+                raise Exception(error_msg)
             else:
-                raise Exception(f"HTTP {response.status_code}: {response.text}")
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                log_api_response(method.upper(), endpoint, response.status_code, error=error_msg)
+                raise Exception(error_msg)
                 
-        except ConnectionError:
-            raise Exception("Cannot connect to server - please check if backend is running")
-        except Timeout:
-            raise Exception("Request timeout - server is not responding")
+        except ConnectionError as e:
+            error_msg = "Cannot connect to server - please check if backend is running"
+            log_api_response(method.upper(), endpoint, 0, error=error_msg)
+            raise Exception(error_msg)
+        except Timeout as e:
+            error_msg = "Request timeout - server is not responding"
+            log_api_response(method.upper(), endpoint, 0, error=error_msg)
+            raise Exception(error_msg)
         except RequestException as e:
-            raise Exception(f"Request failed: {str(e)}")
+            error_msg = f"Request failed: {str(e)}"
+            log_api_response(method.upper(), endpoint, 0, error=error_msg)
+            raise Exception(error_msg)
     
     def login(self, email: str, password: str) -> Dict[str, Any]:
         """Login user and store auth token"""
+        log_app_event("login_attempt", "APIClient", {"email": email})
+        
         data = {
             "email": email,
             "password": password
@@ -81,6 +110,9 @@ class APIClient:
         # Store token for future requests
         if 'token' in result:
             self.token = result['token']
+            log_app_event("login_success", "APIClient", {"email": email})
+        else:
+            log_app_event("login_failed", "APIClient", {"email": email, "reason": "no_token_in_response"})
             
         return result
     
@@ -96,15 +128,18 @@ class APIClient:
     
     def logout(self):
         """Logout user and clear token"""
+        log_app_event("logout_attempt", "APIClient")
+        
         if self.token:
             try:
                 self._make_request('POST', '/api/auth/logout')
-            except:
-                pass  # Ignore errors during logout
+            except Exception as e:
+                log_app_event("logout_api_error", "APIClient", {"error": str(e)})
             finally:
                 self.token = None
                 if 'Authorization' in self.session.headers:
                     del self.session.headers['Authorization']
+                log_app_event("logout_success", "APIClient")
     
     def get_transactions(self) -> Dict[str, Any]:
         return self._make_request('GET', '/api/transactions')

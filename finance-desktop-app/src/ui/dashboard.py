@@ -15,6 +15,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from api.client import APIClient
+from utils.logger import log_user_action, log_app_event, log_window_event
 
 class DashboardWindow(QMainWindow):
     """Main dashboard window"""
@@ -25,8 +26,13 @@ class DashboardWindow(QMainWindow):
         super().__init__(parent)
         self.api_client = api_client
         self.user_data = user_data
+        log_window_event("DashboardWindow", "initializing", {
+            "user_id": user_data.get('id'),
+            "user_name": user_data.get('name')
+        })
         self.initUI()
         self.load_dashboard_data()
+        log_window_event("DashboardWindow", "initialization_complete")
     
     def initUI(self):
         """Initialize dashboard UI"""
@@ -299,6 +305,7 @@ class DashboardWindow(QMainWindow):
             return
         
         page_name = current.data(Qt.UserRole)
+        log_user_action("navigate_to_page", "DashboardWindow", {"page": page_name})
         
         if page_name == 'overview':
             self.show_overview()
@@ -334,19 +341,23 @@ class DashboardWindow(QMainWindow):
     
     def load_dashboard_data(self):
         """Load dashboard summary data"""
+        log_app_event("loading_dashboard_data", "DashboardWindow")
         try:
             # dummy data for now
-            self.update_summary_cards({
+            dashboard_data = {
                 'total_balance': 5250.75,
                 'monthly_income': 3500.00,
                 'monthly_expenses': 2100.50,
                 'savings_rate': 40.0
-            })
+            }
+            self.update_summary_cards(dashboard_data)
+            log_app_event("dashboard_data_loaded", "DashboardWindow", dashboard_data)
             
             # Load recent transactions
             self.load_recent_transactions()
             
         except Exception as e:
+            log_app_event("dashboard_data_load_error", "DashboardWindow", {"error": str(e)})
             QMessageBox.warning(self, 'Error', f'Failed to load dashboard data: {str(e)}')
     
     def update_summary_cards(self, data):
@@ -403,6 +414,7 @@ class DashboardWindow(QMainWindow):
     
     def add_transaction(self):
         """Add new transaction (placeholder)"""
+        log_user_action("add_transaction_clicked", "DashboardWindow")
         QMessageBox.information(
             self,
             'Add Transaction',
@@ -411,9 +423,11 @@ class DashboardWindow(QMainWindow):
     
     def logout(self):
         """Handle logout"""
+        log_user_action("logout_clicked", "DashboardWindow")
         self.api_client.logout()
         self.logout_requested.emit()
         self.close()
+        log_window_event("DashboardWindow", "closed_after_logout")
     
     def apply_styles(self):
         """Apply stylesheet to dashboard"""

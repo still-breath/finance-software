@@ -16,15 +16,18 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from api.client import APIClient
 from ui.auth import LoginDialog, RegisterDialog
 from ui.dashboard import DashboardWindow
+from utils.logger import log_user_action, log_app_event, log_window_event
 
 class MainWindow(QWidget):
     """Main application window"""
     
     def __init__(self):
         super().__init__()
+        log_app_event("application_start", "MainWindow")
         self.api_client = APIClient()
         self.current_user = None
         self.initUI()
+        log_window_event("MainWindow", "initialized")
     
     def initUI(self):
         """Initialize the user interface"""
@@ -104,18 +107,21 @@ class MainWindow(QWidget):
     
     def show_login(self):
         """Show login dialog"""
+        log_user_action("show_login_dialog", "MainWindow")
         login_dialog = LoginDialog(self.api_client, self)
         login_dialog.login_successful.connect(self.on_login_success)
         login_dialog.exec_()
     
     def show_register(self):
         """Show register dialog"""
+        log_user_action("show_register_dialog", "MainWindow")
         register_dialog = RegisterDialog(self.api_client, self)
         register_dialog.registration_successful.connect(self.on_registration_success)
         register_dialog.exec_()
     
     def show_demo(self):
         """Show demo mode (placeholder)"""
+        log_user_action("show_demo_mode", "MainWindow")
         QMessageBox.information(
             self, 
             'Demo Mode', 
@@ -125,16 +131,26 @@ class MainWindow(QWidget):
     def on_login_success(self, result):
         """Handle successful login"""
         self.current_user = result.get('user', {})
+        log_app_event("login_successful", "MainWindow", {
+            "user_id": self.current_user.get('id'),
+            "user_name": self.current_user.get('name')
+        })
         
         # Open dashboard window
         self.dashboard = DashboardWindow(self.api_client, self.current_user, self)
         self.dashboard.logout_requested.connect(self.on_logout)
         self.dashboard.show()
+        log_window_event("DashboardWindow", "opened")
         
+        # Hide main window
         self.hide()
+        log_window_event("MainWindow", "hidden")
     
     def on_registration_success(self, result):
         """Handle successful registration"""
+        log_app_event("registration_successful", "MainWindow", {
+            "user_data": result.get('user', {})
+        })
         QMessageBox.information(
             self,
             'Registration Successful',
@@ -143,21 +159,30 @@ class MainWindow(QWidget):
     
     def on_logout(self):
         """Handle logout from dashboard"""
+        log_app_event("user_logout", "MainWindow")
         self.current_user = None
-        self.show()
+        self.show()  # Show main window again
+        log_window_event("MainWindow", "shown_after_logout")
 
 def main():
     """Main application function"""
+    log_app_event("application_starting", "main")
+    
     app = QApplication(sys.argv)
     
     # Set application properties
     app.setApplicationName('Finance Manager')
     app.setApplicationVersion('1.0.0')
     app.setOrganizationName('Finance App')
+    log_app_event("qt_application_configured", "main")
     
+    # Create and show main window
     window = MainWindow()
     window.show()
-
+    log_window_event("MainWindow", "shown")
+    
+    log_app_event("starting_event_loop", "main")
+    # Start event loop
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

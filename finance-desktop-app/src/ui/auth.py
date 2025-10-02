@@ -14,6 +14,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from api.client import APIClient
+from utils.logger import log_user_action, log_validation_error, log_window_event
 
 class AuthWorker(QThread):
     """Worker thread for authentication operations"""
@@ -173,25 +174,32 @@ class LoginDialog(QDialog):
     
     def login(self):
         """Handle login button click"""
+        log_user_action("login_attempt", "LoginDialog")
+        
         email = self.email_edit.text().strip()
         password = self.password_edit.text()
         
         # Validation
         if not email:
+            log_validation_error("LoginDialog", "email", "empty email")
             QMessageBox.warning(self, 'Validation Error', 'Please enter your email')
             self.email_edit.setFocus()
             return
         
         if not password:
+            log_validation_error("LoginDialog", "password", "empty password")
             QMessageBox.warning(self, 'Validation Error', 'Please enter your password')
             self.password_edit.setFocus()
             return
         
         # Validate email format
         if '@' not in email:
+            log_validation_error("LoginDialog", "email", "invalid email format")
             QMessageBox.warning(self, 'Validation Error', 'Please enter a valid email address')
             self.email_edit.setFocus()
             return
+        
+        log_user_action("login_validation_passed", "LoginDialog", {"email": email})
         
         # Show progress and disable buttons
         self.set_loading(True)
