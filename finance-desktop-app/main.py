@@ -6,18 +6,23 @@ Main entry point for the PyQt5-based personal finance management application.
 
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
+from api.client import APIClient
+from ui.auth import LoginDialog, RegisterDialog
+
 class MainWindow(QWidget):
     """Main application window"""
     
     def __init__(self):
         super().__init__()
+        self.api_client = APIClient()
+        self.current_user = None
         self.initUI()
     
     def initUI(self):
@@ -97,13 +102,41 @@ class MainWindow(QWidget):
         self.move(qr.topLeft())
     
     def show_login(self):
-        print("Login button clicked - will implement login form")
+        """Show login dialog"""
+        login_dialog = LoginDialog(self.api_client, self)
+        login_dialog.login_successful.connect(self.on_login_success)
+        login_dialog.exec_()
     
     def show_register(self):
-        print("Register button clicked - will implement register form")
+        """Show register dialog"""
+        register_dialog = RegisterDialog(self.api_client, self)
+        register_dialog.registration_successful.connect(self.on_registration_success)
+        register_dialog.exec_()
     
     def show_demo(self):
-        print("Demo button clicked - will implement demo mode")
+        """Show demo mode (placeholder)"""
+        QMessageBox.information(
+            self, 
+            'Demo Mode', 
+            'Demo mode will be implemented in the next iteration.\n\nFor now, please use Login or Register to access the application.'
+        )
+    
+    def on_login_success(self, result):
+        """Handle successful login"""
+        self.current_user = result.get('user', {})
+        QMessageBox.information(
+            self,
+            'Login Successful',
+            f'Welcome back, {self.current_user.get("name", "User")}!\n\nDashboard will be implemented in the next iteration.'
+        )
+    
+    def on_registration_success(self, result):
+        """Handle successful registration"""
+        QMessageBox.information(
+            self,
+            'Registration Successful',
+            'Account created successfully!\nYou can now login with your credentials.'
+        )
 
 def main():
     """Main application function"""
