@@ -1,0 +1,8 @@
+PyQt5==5.15.10
+requests==2.31.0
+matplotlib==3.7.2
+pandas==2.1.0
+numpy==1.24.3
+python-dateutil==2.8.2
+pytest==7.4.2
+pytest-qt==4.2.0
