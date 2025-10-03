@@ -90,8 +90,8 @@ class DashboardWindow(QMainWindow):
                 "user_id": user_data.get('id'),
                 "user_name": user_data.get('name')
             })
-            self.setAttribute(Qt.WA_QuitOnClose, False)  # Don't quit app when this window closes
-            self.setWindowFlags(Qt.Window)  # Make it a proper independent window
+            self.setAttribute(Qt.WA_QuitOnClose, False)
+            self.setWindowFlags(Qt.Window)
             
             print("DashboardWindow: Calling initUI...")
             self.initUI()
@@ -327,7 +327,7 @@ class DashboardWindow(QMainWindow):
         self.messages_page = self.create_placeholder_page('✉️ Messages', 'Messaging features coming soon')
         self.notifications_page = self.create_placeholder_page('🔔 Notifications', 'Notifications coming soon')
         self.location_page = self.create_placeholder_page('📍 Location', 'Location features coming soon')
-        self.reports_page = self.create_placeholder_page('📊 Reports', 'Reports & analytics coming soon')
+        self.reports_page = self.create_reports_page()
         
         # Add pages
         self.content_area.addWidget(self.overview_page)
@@ -677,6 +677,107 @@ class DashboardWindow(QMainWindow):
             # Fallback to placeholder if there's an error
             return self.create_placeholder_page('💳 Transactions', f'Error loading transactions: {str(e)}')
     
+    def create_reports_page(self):
+        """Create comprehensive reports and analytics page"""
+        try:
+            page = QWidget()
+            page.setStyleSheet("background-color: transparent;")
+            main_layout = QVBoxLayout(page)
+            main_layout.setContentsMargins(0, 20, 0, 0)
+            main_layout.setSpacing(20)
+            
+            # Page title
+            title = QLabel("📊 Financial Reports & Analytics")
+            title.setFont(QFont('Segoe UI', 24, QFont.Bold))
+            title.setStyleSheet("color: #1a202c; margin-bottom: 10px;")
+            main_layout.addWidget(title)
+            
+            # Create scroll area for all reports
+            scroll = QScrollArea()
+            scroll.setStyleSheet("""
+                QScrollArea {
+                    border: none;
+                    background-color: transparent;
+                }
+                QScrollBar:vertical {
+                    background-color: #f1f5f9;
+                    width: 8px;
+                    border-radius: 4px;
+                }
+                QScrollBar::handle:vertical {
+                    background-color: #cbd5e1;
+                    min-height: 20px;
+                    border-radius: 4px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background-color: #94a3b8;
+                }
+            """)
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            
+            # Content widget for scroll area
+            content_widget = QWidget()
+            content_layout = QVBoxLayout(content_widget)
+            content_layout.setSpacing(20)
+            
+            # Top row - Summary cards
+            summary_layout = QHBoxLayout()
+            summary_layout.setSpacing(20)
+            
+            # Monthly Overview Card
+            monthly_card = self.create_monthly_overview_card()
+            summary_layout.addWidget(monthly_card)
+            
+            # Category Distribution Card
+            category_card = self.create_category_distribution_card()
+            summary_layout.addWidget(category_card)
+            
+            content_layout.addLayout(summary_layout)
+            
+            # Second row - Charts
+            charts_layout = QHBoxLayout()
+            charts_layout.setSpacing(20)
+            
+            # Monthly Trend Chart
+            trend_card = self.create_monthly_trend_card()
+            charts_layout.addWidget(trend_card)
+            
+            # AI Prediction Stats Card
+            ai_stats_card = self.create_ai_stats_card()
+            charts_layout.addWidget(ai_stats_card)
+            
+            content_layout.addLayout(charts_layout)
+            
+            # Third row - Detailed Analytics
+            details_layout = QHBoxLayout()
+            details_layout.setSpacing(20)
+            
+            # Top Categories Table
+            top_categories_card = self.create_top_categories_card()
+            details_layout.addWidget(top_categories_card)
+            
+            # Recent Transactions Summary
+            recent_summary_card = self.create_recent_summary_card()
+            details_layout.addWidget(recent_summary_card)
+            
+            content_layout.addLayout(details_layout)
+            
+            # Add stretch at the end
+            content_layout.addStretch()
+            
+            scroll.setWidget(content_widget)
+            main_layout.addWidget(scroll)
+            
+            # Load data for all cards
+            self.load_reports_data()
+            
+            return page
+            
+        except Exception as e:
+            log_app_event("reports_page_error", "DashboardWindow", {"error": str(e)})
+            return self.create_placeholder_page('📊 Reports', f'Error loading reports: {str(e)}')
+    
     def create_placeholder_page(self, title: str, subtitle: str):
         """Create placeholder page"""
         page = QWidget()
@@ -748,6 +849,10 @@ class DashboardWindow(QMainWindow):
             
             if page_name in page_map:
                 self.content_area.setCurrentIndex(page_map[page_name])
+                
+                # Load reports data when navigating to reports page
+                if page_name == 'reports':
+                    self.load_reports_data()
     
     def apply_styles(self):
         """Apply global styles"""
@@ -810,6 +915,528 @@ class DashboardWindow(QMainWindow):
         except Exception as e:
             log_app_event("charts_update_error", "DashboardWindow", {"error": str(e)})
     
+    def create_monthly_overview_card(self):
+        """Create monthly overview summary card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("📅 This Month Overview")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Create labels for data
+        self.monthly_income_label = QLabel("Income: Loading...")
+        self.monthly_expense_label = QLabel("Expenses: Loading...")
+        self.monthly_balance_label = QLabel("Balance: Loading...")
+        self.monthly_transactions_label = QLabel("Transactions: Loading...")
+        
+        for label in [self.monthly_income_label, self.monthly_expense_label, 
+                     self.monthly_balance_label, self.monthly_transactions_label]:
+            label.setFont(QFont('Segoe UI', 12))
+            label.setStyleSheet("color: #4b5563; margin: 3px 0;")
+            layout.addWidget(label)
+        
+        layout.addStretch()
+        return card
+    
+    def create_category_distribution_card(self):
+        """Create category distribution card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("🎯 Category Distribution")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Container for category stats
+        self.category_stats_layout = QVBoxLayout()
+        layout.addLayout(self.category_stats_layout)
+        
+        # Loading placeholder
+        loading_label = QLabel("Loading category data...")
+        loading_label.setFont(QFont('Segoe UI', 11))
+        loading_label.setStyleSheet("color: #6b7280;")
+        self.category_stats_layout.addWidget(loading_label)
+        
+        layout.addStretch()
+        return card
+    
+    def create_monthly_trend_card(self):
+        """Create monthly trend chart card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("📈 Monthly Trends")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Container for trend info
+        self.trend_info_layout = QVBoxLayout()
+        layout.addLayout(self.trend_info_layout)
+        
+        # Loading placeholder
+        loading_label = QLabel("Loading trend data...")
+        loading_label.setFont(QFont('Segoe UI', 11))
+        loading_label.setStyleSheet("color: #6b7280;")
+        self.trend_info_layout.addWidget(loading_label)
+        
+        layout.addStretch()
+        return card
+    
+    def create_ai_stats_card(self):
+        """Create AI prediction statistics card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("🤖 AI Categorization Stats")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Container for AI stats
+        self.ai_stats_layout = QVBoxLayout()
+        layout.addLayout(self.ai_stats_layout)
+        
+        # Loading placeholder
+        loading_label = QLabel("Loading AI statistics...")
+        loading_label.setFont(QFont('Segoe UI', 11))
+        loading_label.setStyleSheet("color: #6b7280;")
+        self.ai_stats_layout.addWidget(loading_label)
+        
+        layout.addStretch()
+        return card
+    
+    def create_top_categories_card(self):
+        """Create top spending categories card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("🏆 Top Spending Categories")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Container for top categories
+        self.top_categories_layout = QVBoxLayout()
+        layout.addLayout(self.top_categories_layout)
+        
+        # Loading placeholder
+        loading_label = QLabel("Loading top categories...")
+        loading_label.setFont(QFont('Segoe UI', 11))
+        loading_label.setStyleSheet("color: #6b7280;")
+        self.top_categories_layout.addWidget(loading_label)
+        
+        layout.addStretch()
+        return card
+    
+    def create_recent_summary_card(self):
+        """Create recent transactions summary card"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.NoFrame)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        card.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Title
+        title = QLabel("⏰ Recent Activity")
+        title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title.setStyleSheet("color: #1f2937; margin-bottom: 15px;")
+        layout.addWidget(title)
+        
+        # Container for recent summary
+        self.recent_summary_layout = QVBoxLayout()
+        layout.addLayout(self.recent_summary_layout)
+        
+        # Loading placeholder
+        loading_label = QLabel("Loading recent activity...")
+        loading_label.setFont(QFont('Segoe UI', 11))
+        loading_label.setStyleSheet("color: #6b7280;")
+        self.recent_summary_layout.addWidget(loading_label)
+        
+        layout.addStretch()
+        return card
+    
+    def load_reports_data(self):
+        """Load all data for reports page"""
+        try:
+            # Load monthly stats
+            monthly_data = self.api_client.get_monthly_stats()
+            self.update_monthly_overview(monthly_data)
+            
+            # Load category stats
+            category_data = self.api_client.get_category_stats()
+            self.update_category_distribution(category_data)
+            self.update_ai_stats(category_data)
+            self.update_top_categories(category_data)
+            
+            # Load recent transactions for summary
+            transactions_data = self.api_client.get_transactions()
+            self.update_recent_summary(transactions_data)
+            
+        except Exception as e:
+            log_app_event("load_reports_data_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_monthly_overview(self, data):
+        """Update monthly overview card with data"""
+        try:
+            monthly_stats = data.get('monthly_stats', [])
+            if monthly_stats:
+                current_month = monthly_stats[0]  # Latest month
+                income = current_month.get('income', 0)
+                expense = current_month.get('expense', 0)
+                balance = current_month.get('balance', 0)
+                
+                # Get transaction count from summary
+                summary_data = self.api_client.get_transaction_summary()
+                transaction_count = summary_data.get('summary', {}).get('transaction_count', 0)
+                
+                self.monthly_income_label.setText(f"💰 Income: Rp {income:,.0f}")
+                self.monthly_income_label.setStyleSheet("color: #059669; font-weight: 600; margin: 3px 0;")
+                
+                self.monthly_expense_label.setText(f"💸 Expenses: Rp {expense:,.0f}")
+                self.monthly_expense_label.setStyleSheet("color: #dc2626; font-weight: 600; margin: 3px 0;")
+                
+                balance_color = "#059669" if balance >= 0 else "#dc2626"
+                self.monthly_balance_label.setText(f"📊 Balance: Rp {balance:,.0f}")
+                self.monthly_balance_label.setStyleSheet(f"color: {balance_color}; font-weight: 600; margin: 3px 0;")
+                
+                self.monthly_transactions_label.setText(f"🧾 Transactions: {transaction_count}")
+                self.monthly_transactions_label.setStyleSheet("color: #4b5563; font-weight: 600; margin: 3px 0;")
+            else:
+                self.monthly_income_label.setText("💰 Income: Rp 0")
+                self.monthly_expense_label.setText("💸 Expenses: Rp 0")
+                self.monthly_balance_label.setText("📊 Balance: Rp 0")
+                self.monthly_transactions_label.setText("🧾 Transactions: 0")
+                
+        except Exception as e:
+            log_app_event("update_monthly_overview_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_category_distribution(self, data):
+        """Update category distribution card"""
+        try:
+            # Clear existing widgets
+            while self.category_stats_layout.count():
+                child = self.category_stats_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            
+            categories = data.get('category_distribution', [])
+            if categories:
+                for i, category in enumerate(categories[:5]):  # Top 5 categories
+                    name = category.get('category_name', 'Unknown')
+                    amount = abs(category.get('total_amount', 0))
+                    count = category.get('transaction_count', 0)
+                    
+                    # Create category item
+                    item_widget = QWidget()
+                    item_layout = QHBoxLayout(item_widget)
+                    item_layout.setContentsMargins(0, 5, 0, 5)
+                    
+                    # Category info
+                    info_label = QLabel(f"{name}")
+                    info_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+                    info_label.setStyleSheet("color: #374151;")
+                    
+                    # Amount and count
+                    stats_label = QLabel(f"Rp {amount:,.0f} ({count} txn)")
+                    stats_label.setFont(QFont('Segoe UI', 10))
+                    stats_label.setStyleSheet("color: #6b7280;")
+                    stats_label.setAlignment(Qt.AlignRight)
+                    
+                    item_layout.addWidget(info_label)
+                    item_layout.addStretch()
+                    item_layout.addWidget(stats_label)
+                    
+                    self.category_stats_layout.addWidget(item_widget)
+            else:
+                no_data_label = QLabel("No category data available")
+                no_data_label.setFont(QFont('Segoe UI', 11))
+                no_data_label.setStyleSheet("color: #9ca3af;")
+                self.category_stats_layout.addWidget(no_data_label)
+                
+        except Exception as e:
+            log_app_event("update_category_distribution_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_ai_stats(self, data):
+        """Update AI statistics card"""
+        try:
+            # Clear existing widgets
+            while self.ai_stats_layout.count():
+                child = self.ai_stats_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            
+            prediction_methods = data.get('prediction_methods', [])
+            total_predictions = sum(method.get('count', 0) for method in prediction_methods)
+            
+            if prediction_methods and total_predictions > 0:
+                for method in prediction_methods:
+                    method_name = method.get('method', 'unknown')
+                    count = method.get('count', 0)
+                    percentage = (count / total_predictions) * 100 if total_predictions > 0 else 0
+                    
+                    # Method display names
+                    display_names = {
+                        'ai_prediction': '🤖 AI Prediction',
+                        'manual': '👤 Manual',
+                        'default': '⚡ Default'
+                    }
+                    display_name = display_names.get(method_name, method_name.title())
+                    
+                    # Create method item
+                    item_widget = QWidget()
+                    item_layout = QHBoxLayout(item_widget)
+                    item_layout.setContentsMargins(0, 3, 0, 3)
+                    
+                    method_label = QLabel(display_name)
+                    method_label.setFont(QFont('Segoe UI', 11))
+                    method_label.setStyleSheet("color: #374151;")
+                    
+                    stats_label = QLabel(f"{percentage:.1f}% ({count})")
+                    stats_label.setFont(QFont('Segoe UI', 10, QFont.Medium))
+                    stats_label.setStyleSheet("color: #6366f1;")
+                    stats_label.setAlignment(Qt.AlignRight)
+                    
+                    item_layout.addWidget(method_label)
+                    item_layout.addStretch()
+                    item_layout.addWidget(stats_label)
+                    
+                    self.ai_stats_layout.addWidget(item_widget)
+            else:
+                no_data_label = QLabel("No prediction data available")
+                no_data_label.setFont(QFont('Segoe UI', 11))
+                no_data_label.setStyleSheet("color: #9ca3af;")
+                self.ai_stats_layout.addWidget(no_data_label)
+                
+        except Exception as e:
+            log_app_event("update_ai_stats_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_top_categories(self, data):
+        """Update top categories card"""
+        try:
+            # Clear existing widgets
+            while self.top_categories_layout.count():
+                child = self.top_categories_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            
+            categories = data.get('category_distribution', [])
+            if categories:
+                # Sort by total amount (descending)
+                sorted_categories = sorted(categories, key=lambda x: abs(x.get('total_amount', 0)), reverse=True)
+                
+                for i, category in enumerate(sorted_categories[:3]):  # Top 3
+                    name = category.get('category_name', 'Unknown')
+                    amount = abs(category.get('total_amount', 0))
+                    avg_amount = abs(category.get('avg_amount', 0))
+                    
+                    # Rank emoji
+                    rank_emojis = ['🥇', '🥈', '🥉']
+                    rank_emoji = rank_emojis[i] if i < 3 else '🏅'
+                    
+                    # Create ranking item
+                    item_widget = QWidget()
+                    item_layout = QVBoxLayout(item_widget)
+                    item_layout.setContentsMargins(0, 8, 0, 8)
+                    
+                    # Rank and category
+                    rank_layout = QHBoxLayout()
+                    rank_label = QLabel(f"{rank_emoji} {name}")
+                    rank_label.setFont(QFont('Segoe UI', 12, QFont.Bold))
+                    rank_label.setStyleSheet("color: #1f2937;")
+                    
+                    amount_label = QLabel(f"Rp {amount:,.0f}")
+                    amount_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+                    amount_label.setStyleSheet("color: #dc2626;")
+                    amount_label.setAlignment(Qt.AlignRight)
+                    
+                    rank_layout.addWidget(rank_label)
+                    rank_layout.addStretch()
+                    rank_layout.addWidget(amount_label)
+                    
+                    # Average info
+                    avg_label = QLabel(f"Avg: Rp {avg_amount:,.0f} per transaction")
+                    avg_label.setFont(QFont('Segoe UI', 9))
+                    avg_label.setStyleSheet("color: #6b7280; margin-left: 24px;")
+                    
+                    item_layout.addLayout(rank_layout)
+                    item_layout.addWidget(avg_label)
+                    
+                    self.top_categories_layout.addWidget(item_widget)
+                    
+                    # Add separator line except for last item
+                    if i < min(len(sorted_categories) - 1, 2):
+                        separator = QFrame()
+                        separator.setFrameShape(QFrame.HLine)
+                        separator.setStyleSheet("color: #e5e7eb; margin: 5px 0;")
+                        self.top_categories_layout.addWidget(separator)
+            else:
+                no_data_label = QLabel("No spending data available")
+                no_data_label.setFont(QFont('Segoe UI', 11))
+                no_data_label.setStyleSheet("color: #9ca3af;")
+                self.top_categories_layout.addWidget(no_data_label)
+                
+        except Exception as e:
+            log_app_event("update_top_categories_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_recent_summary(self, data):
+        """Update recent activity summary"""
+        try:
+            # Clear existing widgets
+            while self.recent_summary_layout.count():
+                child = self.recent_summary_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            
+            transactions = data.get('transactions', [])
+            if transactions:
+                # Show recent 5 transactions
+                recent_transactions = transactions[:5]
+                
+                for transaction in recent_transactions:
+                    description = transaction.get('description', 'Unknown')
+                    amount = transaction.get('amount', 0)
+                    category = transaction.get('category_name', 'No Category')
+                    date = transaction.get('transaction_date', '')[:10]  # Just date part
+                    
+                    # Create transaction item
+                    item_widget = QWidget()
+                    item_layout = QVBoxLayout(item_widget)
+                    item_layout.setContentsMargins(0, 5, 0, 5)
+                    
+                    # Main info layout
+                    main_layout = QHBoxLayout()
+                    
+                    # Transaction info
+                    desc_label = QLabel(description[:30] + "..." if len(description) > 30 else description)
+                    desc_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+                    desc_label.setStyleSheet("color: #374151;")
+                    
+                    # Amount
+                    amount_color = "#059669" if amount > 0 else "#dc2626"
+                    amount_text = f"+Rp {amount:,.0f}" if amount > 0 else f"Rp {abs(amount):,.0f}"
+                    amount_label = QLabel(amount_text)
+                    amount_label.setFont(QFont('Segoe UI', 10, QFont.Bold))
+                    amount_label.setStyleSheet(f"color: {amount_color};")
+                    amount_label.setAlignment(Qt.AlignRight)
+                    
+                    main_layout.addWidget(desc_label)
+                    main_layout.addStretch()
+                    main_layout.addWidget(amount_label)
+                    
+                    # Category and date info
+                    details_label = QLabel(f"{category} • {date}")
+                    details_label.setFont(QFont('Segoe UI', 9))
+                    details_label.setStyleSheet("color: #6b7280;")
+                    
+                    item_layout.addLayout(main_layout)
+                    item_layout.addWidget(details_label)
+                    
+                    self.recent_summary_layout.addWidget(item_widget)
+            else:
+                no_data_label = QLabel("No recent transactions")
+                no_data_label.setFont(QFont('Segoe UI', 11))
+                no_data_label.setStyleSheet("color: #9ca3af;")
+                self.recent_summary_layout.addWidget(no_data_label)
+                
+        except Exception as e:
+            log_app_event("update_recent_summary_error", "DashboardWindow", {"error": str(e)})
+
     def ensure_visible(self):
         self.show()
         self.setWindowState(Qt.WindowNoState)
