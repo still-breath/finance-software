@@ -97,6 +97,10 @@ class DashboardWindow(QMainWindow):
         self.setWindowTitle('Dashboard - Finance Manager')
         self.setGeometry(100, 100, 1400, 800)
         
+        self.setWindowState(Qt.WindowNoState)
+        self.activateWindow()
+        self.raise_()
+        
         # Create central widget with background
         central_widget = QWidget()
         central_widget.setStyleSheet("background-color: #f0f2f5;")
@@ -705,6 +709,15 @@ class DashboardWindow(QMainWindow):
         log_app_event("dashboard_data_load_started", "DashboardWindow")
         # Load real data from API here
         pass
+    
+    def ensure_visible(self):
+        self.show()
+        self.setWindowState(Qt.WindowNoState)
+        self.activateWindow()
+        self.raise_()
+        print(f"Dashboard visibility: {self.isVisible()}")
+        print(f"Dashboard window state: {self.windowState()}")
+        log_window_event("DashboardWindow", "forced_visible")
     
     def logout(self):
         """Handle logout"""

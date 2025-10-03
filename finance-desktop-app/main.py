@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from api.client import APIClient
 from ui.auth import LoginDialog, RegisterDialog
 from ui.dashboard import DashboardWindow
+from ui.simple_dashboard import UltraSimpleDashboard  
 from utils.logger import log_user_action, log_app_event, log_window_event, log_validation_error
 
 class MainWindow(QWidget):
@@ -248,14 +249,18 @@ class MainWindow(QWidget):
             # Try simple dashboard first for debugging
             print(f"Attempting to create dashboard for user: {self.current_user}")
             
-            # Use simple dashboard to debug crash issues
-            self.dashboard = DashboardWindow(self.api_client, self.current_user, self)
+            self.dashboard = UltraSimpleDashboard(self.api_client, self.current_user, None)
             self.dashboard.logout_requested.connect(self.on_logout)
             
-            print("Simple dashboard created, showing...")
+            print("Dashboard created, showing...")
             self.dashboard.show()
-            self.hide()
-            log_window_event("DashboardWindow", "opened")
+            self.dashboard.activateWindow()
+            self.dashboard.raise_()
+            
+            # Don't hide main window immediately - let dashboard stabilize first
+            print("Dashboard shown, keeping main window for stability...")
+            
+            log_window_event("UltraSimpleDashboard", "opened")
             print("Dashboard should be visible now")
             
         except Exception as e:
