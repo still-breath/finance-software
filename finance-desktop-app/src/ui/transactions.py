@@ -326,13 +326,11 @@ class AddTransactionDialog(QDialog):
         
         # Prepare transaction data
         transaction_date = self.date_edit.date().toPyDate()
-        category_id = self.category_combo.currentData()
         
         transaction_data = {
             'description': description,
             'amount': amount,
-            'transaction_date': transaction_date.isoformat(),
-            'category_id': category_id
+            'transaction_date': transaction_date.isoformat() + 'T00:00:00Z'
         }
         
         # Disable form during save
@@ -432,9 +430,21 @@ class AddTransactionDialog(QDialog):
     
     def create_and_select_category(self, category_name: str):
         """Create a new category and add it to the dropdown"""
+        sanitized_name = category_name.replace('&', 'dan').replace('/', ' ').strip()
+        for category in self.categories:
+            if category['name'].lower() == sanitized_name.lower():
+                # Found existing category, select it
+                for i in range(self.category_combo.count()):
+                    if self.category_combo.itemData(i) == category['id']:
+                        self.category_combo.setCurrentIndex(i)
+                        self.ai_suggestion_label.setText(
+                            f"🤖 Selected existing category: {category['name']}"
+                        )
+                        return
+        
+        # Category doesn't exist locally, try to create it
         try:
-            # Call API to create the category
-            result = self.api_client.create_category(category_name)
+            result = self.api_client.create_category(sanitized_name)
             
             if result and 'category' in result:
                 new_category = result['category']
@@ -450,13 +460,45 @@ class AddTransactionDialog(QDialog):
                 
                 # Update the AI suggestion to show it was created
                 self.ai_suggestion_label.setText(
-                    f"🤖 Created and selected category: {category_name}"
+                    f"🤖 Created and selected category: {new_category['name']}"
                 )
                 
         except Exception as e:
-            # If creation fails, just show the suggestion without auto-selecting
+            # If creation fails, it might already exist in database but not in our local list
+            # Refresh categories and try to find it
+            self.refresh_categories_and_select(sanitized_name)
+    
+    def refresh_categories_and_select(self, category_name: str):
+        """Refresh categories from API and try to select the given category"""
+        try:
+            # Refresh categories from backend
+            result = self.api_client.get_categories()
+            if result and 'categories' in result:
+                self.categories = result['categories']
+                
+                # Rebuild dropdown
+                self.category_combo.clear()
+                self.category_combo.addItem('-- Select Category --', None)
+                for category in self.categories:
+                    self.category_combo.addItem(category['name'], category['id'])
+                
+                # Try to select the desired category
+                for i in range(self.category_combo.count()):
+                    if self.category_combo.itemText(i).lower() == category_name.lower():
+                        self.category_combo.setCurrentIndex(i)
+                        self.ai_suggestion_label.setText(
+                            f"🤖 Found and selected category: {self.category_combo.itemText(i)}"
+                        )
+                        return
+            
+            # Still not found, show fallback message
             self.ai_suggestion_label.setText(
                 f"🤖 AI suggests: {category_name} (will be created when you save)"
+            )
+            
+        except Exception as e:
+            self.ai_suggestion_label.setText(
+                f"🤖 AI suggests: {category_name} (category will be auto-created)"
             )
     
     def set_loading(self, loading: bool):
@@ -648,7 +690,7 @@ class TransactionListWidget(QWidget):
     def on_load_success(self, result):
         """Handle successful load"""
         self.set_loading(False)
-        self.transactions = result.get('data', [])
+        self.transactions = result.get('transactions', []) or []
         self.populate_table()
         log_user_action("transactions_loaded", "TransactionListWidget", 
                        {"count": len(self.transactions)})
