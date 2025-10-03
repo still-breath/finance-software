@@ -1,13 +1,14 @@
 """
 Authentication UI components for Finance Desktop Application
-Login and Registration forms with validation
+Login and Registration forms with modern design
 """
 
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
                            QLineEdit, QPushButton, QLabel, QMessageBox, 
-                           QProgressBar, QCheckBox)
+                           QProgressBar, QCheckBox, QWidget, QGraphicsDropShadowEffect,
+                           QFrame)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QFont, QPixmap, QColor
 import sys
 import os
 
@@ -47,7 +48,7 @@ class AuthWorker(QThread):
             self.error.emit(str(e))
 
 class LoginDialog(QDialog):
-    """Login dialog window"""
+    """Modern login dialog with clean design"""
     
     login_successful = pyqtSignal(dict)
     
@@ -58,118 +59,271 @@ class LoginDialog(QDialog):
         self.initUI()
     
     def initUI(self):
-        """Initialize login dialog UI"""
-        self.setWindowTitle('Login')
-        self.setFixedSize(400, 300)
+        self.setWindowTitle('Finance Manager')
+        self.setFixedSize(900, 600)
         self.setModal(True)
         
-        # Main layout
-        layout = QVBoxLayout()
+        # Main layout - horizontal split
+        main_layout = QHBoxLayout()
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Title
-        title = QLabel('Login to Finance Manager')
-        title_font = QFont()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
-        title.setFont(title_font)
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
+        # Left side - Login form
+        left_widget = QWidget()
+        left_widget.setStyleSheet("background-color: white;")
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(60, 50, 60, 50)
+        left_layout.setSpacing(25)
         
-        # Form layout
-        form_layout = QFormLayout()
+        # Logo section
+        logo_container = QWidget()
+        logo_layout = QHBoxLayout(logo_container)
+        logo_layout.setContentsMargins(0, 0, 0, 0)
+        logo_layout.setSpacing(10)
+        
+        logo_label = QLabel('💰')
+        logo_label.setFont(QFont('Open Sans', 28))
+        
+        logo_text = QLabel('Finance Manager')
+        logo_text.setFont(QFont('Open Sans', 16, QFont.Bold))
+        logo_text.setStyleSheet("color: #2c3e50;")
+        
+        logo_layout.addWidget(logo_label)
+        logo_layout.addWidget(logo_text)
+        logo_layout.addStretch()
+        
+        left_layout.addWidget(logo_container)
+        left_layout.addSpacing(20)
+        
+        # Welcome text
+        welcome_title = QLabel('Welcome Back!')
+        welcome_title.setFont(QFont('Open Sans', 28, QFont.Bold))
+        welcome_title.setStyleSheet("color: #2c3e50;")
+        
+        welcome_subtitle = QLabel('Please login to your account')
+        welcome_subtitle.setFont(QFont('Open Sans', 12))
+        welcome_subtitle.setStyleSheet("color: #7f8c8d;")
+        
+        left_layout.addWidget(welcome_title)
+        left_layout.addWidget(welcome_subtitle)
+        left_layout.addSpacing(15)
+        
+        # Form fields
+        form_widget = QWidget()
+        form_layout = QVBoxLayout(form_widget)
+        form_layout.setSpacing(20)
         
         # Username field
+        username_label = QLabel('Username')
+        username_label.setFont(QFont('Open Sans', 11, QFont.Medium))
+        username_label.setStyleSheet("color: #2c3e50;")
+        
         self.username_edit = QLineEdit()
         self.username_edit.setPlaceholderText('Enter your username')
-        form_layout.addRow('Username:', self.username_edit)
+        self.username_edit.setFont(QFont('Open Sans', 12))
+        self.username_edit.setMinimumHeight(50)
+        
+        form_layout.addWidget(username_label)
+        form_layout.addWidget(self.username_edit)
         
         # Password field
+        password_label = QLabel('Password')
+        password_label.setFont(QFont('Open Sans', 11, QFont.Medium))
+        password_label.setStyleSheet("color: #2c3e50;")
+        
         self.password_edit = QLineEdit()
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setPlaceholderText('Enter your password')
-        form_layout.addRow('Password:', self.password_edit)
+        self.password_edit.setFont(QFont('Open Sans', 12))
+        self.password_edit.setMinimumHeight(50)
         
-        # Remember me checkbox
+        form_layout.addWidget(password_label)
+        form_layout.addWidget(self.password_edit)
+        
+        # Remember me
+        remember_layout = QHBoxLayout()
         self.remember_cb = QCheckBox('Remember me')
-        form_layout.addRow('', self.remember_cb)
+        self.remember_cb.setFont(QFont('Open Sans', 10))
+        self.remember_cb.setStyleSheet("color: #7f8c8d;")
         
-        layout.addLayout(form_layout)
+        forgot_btn = QPushButton('Forgot Password?')
+        forgot_btn.setFlat(True)
+        forgot_btn.setFont(QFont('Open Sans', 10))
+        forgot_btn.setStyleSheet("color: #3498db; border: none; text-align: right;")
+        forgot_btn.setCursor(Qt.PointingHandCursor)
         
-        # Progress bar (hidden initially)
+        remember_layout.addWidget(self.remember_cb)
+        remember_layout.addStretch()
+        remember_layout.addWidget(forgot_btn)
+        
+        form_layout.addLayout(remember_layout)
+        
+        left_layout.addWidget(form_widget)
+        left_layout.addSpacing(10)
+        
+        # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
-        layout.addWidget(self.progress_bar)
+        self.progress_bar.setFixedHeight(3)
+        self.progress_bar.setTextVisible(False)
+        left_layout.addWidget(self.progress_bar)
         
-        # Buttons
-        button_layout = QHBoxLayout()
-        
-        self.login_btn = QPushButton('Login')
+        # Login button
+        self.login_btn = QPushButton('LOGIN')
         self.login_btn.setDefault(True)
+        self.login_btn.setFixedHeight(55)
+        self.login_btn.setFont(QFont('Open Sans', 13, QFont.Bold))
+        self.login_btn.setCursor(Qt.PointingHandCursor)
         self.login_btn.clicked.connect(self.login)
         
-        self.register_btn = QPushButton('Create Account')
+        left_layout.addWidget(self.login_btn)
+        
+        # Sign up link
+        signup_widget = QWidget()
+        signup_layout = QHBoxLayout(signup_widget)
+        signup_layout.setContentsMargins(0, 0, 0, 0)
+        
+        signup_text = QLabel("Don't have an account?")
+        signup_text.setFont(QFont('Open Sans', 11))
+        signup_text.setStyleSheet("color: #7f8c8d;")
+        
+        self.register_btn = QPushButton('Sign Up')
+        self.register_btn.setFlat(True)
+        self.register_btn.setFont(QFont('Open Sans', 11, QFont.Bold))
+        self.register_btn.setStyleSheet("color: #3498db; border: none;")
+        self.register_btn.setCursor(Qt.PointingHandCursor)
         self.register_btn.clicked.connect(self.show_register)
         
-        self.cancel_btn = QPushButton('Cancel')
-        self.cancel_btn.clicked.connect(self.reject)
+        signup_layout.addStretch()
+        signup_layout.addWidget(signup_text)
+        signup_layout.addWidget(self.register_btn)
+        signup_layout.addStretch()
         
-        button_layout.addWidget(self.login_btn)
-        button_layout.addWidget(self.register_btn)
-        button_layout.addWidget(self.cancel_btn)
+        left_layout.addWidget(signup_widget)
+        left_layout.addStretch()
         
-        layout.addLayout(button_layout)
+        # Right side - Illustration panel
+        right_widget = QWidget()
+        right_widget.setFixedWidth(350)
+        right_widget.setStyleSheet("""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #3498db, stop:1 #2980b9);
+        """)
         
-        # Set layout
-        self.setLayout(layout)
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(40, 60, 40, 60)
+        right_layout.setAlignment(Qt.AlignCenter)
         
-        # Connect Enter key to login
+        # Illustration
+        illustration = QLabel('📊')
+        illustration.setFont(QFont('Open Sans', 120))
+        illustration.setAlignment(Qt.AlignCenter)
+        
+        # Text on right panel
+        right_title = QLabel('Financial Management')
+        right_title.setFont(QFont('Open Sans', 20, QFont.Bold))
+        right_title.setStyleSheet("color: white;")
+        right_title.setAlignment(Qt.AlignCenter)
+        right_title.setWordWrap(True)
+        
+        right_subtitle = QLabel('Track, analyze, and manage your finances with ease')
+        right_subtitle.setFont(QFont('Open Sans', 12))
+        right_subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9);")
+        right_subtitle.setAlignment(Qt.AlignCenter)
+        right_subtitle.setWordWrap(True)
+        
+        right_layout.addStretch()
+        right_layout.addWidget(illustration)
+        right_layout.addSpacing(30)
+        right_layout.addWidget(right_title)
+        right_layout.addSpacing(15)
+        right_layout.addWidget(right_subtitle)
+        right_layout.addStretch()
+        
+        # Add both sides to main layout
+        main_layout.addWidget(left_widget, stretch=1)
+        main_layout.addWidget(right_widget)
+        
+        self.setLayout(main_layout)
+        
+        # Connect Enter key
         self.password_edit.returnPressed.connect(self.login)
         
-        # Style
+        self.apply_modern_styling()
+    
+    def apply_modern_styling(self):
         self.setStyleSheet("""
             QDialog {
-                background-color: #f0f0f0;
-            }
-            QLineEdit {
-                padding: 8px;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-            QLineEdit:focus {
-                border-color: #0066cc;
-            }
-            QPushButton {
-                padding: 8px 16px;
-                font-size: 12px;
+                background-color: white;
                 border: none;
-                border-radius: 4px;
-                background-color: #0066cc;
+            }
+            
+            QLineEdit {
+                background-color: #f8f9fa;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                padding: 12px 16px;
+                font-size: 13px;
+                color: #2c3e50;
+            }
+            
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: white;
+            }
+            
+            QLineEdit:hover {
+                border-color: #3498db;
+            }
+            
+            QPushButton#login_btn {
+                background-color: #3498db;
                 color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                letter-spacing: 1px;
             }
-            QPushButton:hover {
-                background-color: #0052a3;
+            
+            QPushButton#login_btn:hover {
+                background-color: #2980b9;
             }
-            QPushButton:pressed {
-                background-color: #003d7a;
+            
+            QPushButton#login_btn:pressed {
+                background-color: #21618c;
             }
-            QPushButton#register_btn {
-                background-color: #28a745;
+            
+            QPushButton#login_btn:disabled {
+                background-color: #bdc3c7;
             }
-            QPushButton#register_btn:hover {
-                background-color: #218838;
+            
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: 2px solid #bdc3c7;
+                background-color: white;
             }
-            QPushButton#cancel_btn {
-                background-color: #6c757d;
+            
+            QCheckBox::indicator:checked {
+                background-color: #3498db;
+                border-color: #3498db;
+                image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDNMNC41IDguNUwyIDYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=);
             }
-            QPushButton#cancel_btn:hover {
-                background-color: #545b62;
+            
+            QProgressBar {
+                border: none;
+                background-color: #ecf0f1;
+                border-radius: 2px;
+            }
+            
+            QProgressBar::chunk {
+                background-color: #3498db;
+                border-radius: 2px;
             }
         """)
         
-        # Set button names for styling
-        self.register_btn.setObjectName('register_btn')
-        self.cancel_btn.setObjectName('cancel_btn')
+        self.login_btn.setObjectName('login_btn')
     
     def login(self):
         """Handle login button click"""
@@ -178,7 +332,7 @@ class LoginDialog(QDialog):
         username = self.username_edit.text().strip()
         password = self.password_edit.text().strip()
         
-        # Basic validation
+        # Validation
         if not username:
             log_validation_error("LoginDialog", "username", "empty username")
             QMessageBox.warning(self, 'Validation Error', 'Please enter your username')
@@ -199,10 +353,10 @@ class LoginDialog(QDialog):
         
         log_user_action("login_validation_passed", "LoginDialog", {"username": username})
         
-        # Show progress and disable buttons
+        # Show progress
         self.set_loading(True)
         
-        # Start authentication in background thread
+        # Start authentication
         self.auth_worker = AuthWorker(self.api_client, 'login', username=username, password=password)
         self.auth_worker.success.connect(self.on_login_success)
         self.auth_worker.error.connect(self.on_login_error)
@@ -237,17 +391,15 @@ class LoginDialog(QDialog):
         """Set loading state"""
         self.progress_bar.setVisible(loading)
         if loading:
-            self.progress_bar.setRange(0, 0)  # Indeterminate progress
+            self.progress_bar.setRange(0, 0)
         
-        # Disable/enable form elements
         self.username_edit.setEnabled(not loading)
         self.password_edit.setEnabled(not loading)
         self.login_btn.setEnabled(not loading)
         self.register_btn.setEnabled(not loading)
-        self.cancel_btn.setEnabled(not loading)
 
 class RegisterDialog(QDialog):
-    """Registration dialog window"""
+    """Modern registration dialog"""
     
     registration_successful = pyqtSignal(dict)
     
@@ -260,106 +412,249 @@ class RegisterDialog(QDialog):
     def initUI(self):
         """Initialize registration dialog UI"""
         self.setWindowTitle('Create Account')
-        self.setFixedSize(400, 350)
+        self.setFixedSize(900, 600)
         self.setModal(True)
         
-        # Main layout
-        layout = QVBoxLayout()
+        # Main layout - horizontal split
+        main_layout = QHBoxLayout()
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Left side - Illustration panel
+        left_widget = QWidget()
+        left_widget.setFixedWidth(350)
+        left_widget.setStyleSheet("""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #27ae60, stop:1 #229954);
+        """)
+        
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(40, 60, 40, 60)
+        left_layout.setAlignment(Qt.AlignCenter)
+        
+        # Illustration
+        illustration = QLabel('🚀')
+        illustration.setFont(QFont('Open Sans', 120))
+        illustration.setAlignment(Qt.AlignCenter)
+        
+        # Text on left panel
+        left_title = QLabel('Join Us Today')
+        left_title.setFont(QFont('Open Sans', 20, QFont.Bold))
+        left_title.setStyleSheet("color: white;")
+        left_title.setAlignment(Qt.AlignCenter)
+        left_title.setWordWrap(True)
+        
+        left_subtitle = QLabel('Start your financial journey with our comprehensive management tools')
+        left_subtitle.setFont(QFont('Open Sans', 12))
+        left_subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9);")
+        left_subtitle.setAlignment(Qt.AlignCenter)
+        left_subtitle.setWordWrap(True)
+        
+        left_layout.addStretch()
+        left_layout.addWidget(illustration)
+        left_layout.addSpacing(30)
+        left_layout.addWidget(left_title)
+        left_layout.addSpacing(15)
+        left_layout.addWidget(left_subtitle)
+        left_layout.addStretch()
+        
+        # Right side - Registration form
+        right_widget = QWidget()
+        right_widget.setStyleSheet("background-color: white;")
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(60, 50, 60, 50)
+        right_layout.setSpacing(25)
+        
+        # Logo section
+        logo_container = QWidget()
+        logo_layout = QHBoxLayout(logo_container)
+        logo_layout.setContentsMargins(0, 0, 0, 0)
+        logo_layout.setSpacing(10)
+        
+        logo_label = QLabel('💰')
+        logo_label.setFont(QFont('Open Sans', 28))
+        
+        logo_text = QLabel('Finance Manager')
+        logo_text.setFont(QFont('Open Sans', 16, QFont.Bold))
+        logo_text.setStyleSheet("color: #2c3e50;")
+        
+        logo_layout.addWidget(logo_label)
+        logo_layout.addWidget(logo_text)
+        logo_layout.addStretch()
+        
+        right_layout.addWidget(logo_container)
+        right_layout.addSpacing(20)
         
         # Title
-        title = QLabel('Create Your Account')
-        title_font = QFont()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
-        title.setFont(title_font)
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
+        title = QLabel('Create Account')
+        title.setFont(QFont('Open Sans', 28, QFont.Bold))
+        title.setStyleSheet("color: #2c3e50;")
         
-        # Form layout
-        form_layout = QFormLayout()
+        subtitle = QLabel('Sign up to get started')
+        subtitle.setFont(QFont('Open Sans', 12))
+        subtitle.setStyleSheet("color: #7f8c8d;")
+        
+        right_layout.addWidget(title)
+        right_layout.addWidget(subtitle)
+        right_layout.addSpacing(15)
+        
+        # Form fields
+        form_widget = QWidget()
+        form_layout = QVBoxLayout(form_widget)
+        form_layout.setSpacing(18)
         
         # Username field
+        username_label = QLabel('Username')
+        username_label.setFont(QFont('Open Sans', 11, QFont.Medium))
+        username_label.setStyleSheet("color: #2c3e50;")
+        
         self.username_edit = QLineEdit()
-        self.username_edit.setPlaceholderText('Enter your username')
-        form_layout.addRow('Username:', self.username_edit)
+        self.username_edit.setPlaceholderText('Choose a username')
+        self.username_edit.setFont(QFont('Open Sans', 12))
+        self.username_edit.setMinimumHeight(50)
+        
+        form_layout.addWidget(username_label)
+        form_layout.addWidget(self.username_edit)
         
         # Password field
+        password_label = QLabel('Password')
+        password_label.setFont(QFont('Open Sans', 11, QFont.Medium))
+        password_label.setStyleSheet("color: #2c3e50;")
+        
         self.password_edit = QLineEdit()
         self.password_edit.setEchoMode(QLineEdit.Password)
-        self.password_edit.setPlaceholderText('Enter your password')
-        form_layout.addRow('Password:', self.password_edit)
+        self.password_edit.setPlaceholderText('Create a strong password')
+        self.password_edit.setFont(QFont('Open Sans', 12))
+        self.password_edit.setMinimumHeight(50)
+        
+        form_layout.addWidget(password_label)
+        form_layout.addWidget(self.password_edit)
         
         # Confirm password field
+        confirm_label = QLabel('Confirm Password')
+        confirm_label.setFont(QFont('Open Sans', 11, QFont.Medium))
+        confirm_label.setStyleSheet("color: #2c3e50;")
+        
         self.confirm_password_edit = QLineEdit()
         self.confirm_password_edit.setEchoMode(QLineEdit.Password)
         self.confirm_password_edit.setPlaceholderText('Confirm your password')
-        form_layout.addRow('Confirm Password:', self.confirm_password_edit)
+        self.confirm_password_edit.setFont(QFont('Open Sans', 12))
+        self.confirm_password_edit.setMinimumHeight(50)
         
-        layout.addLayout(form_layout)
+        form_layout.addWidget(confirm_label)
+        form_layout.addWidget(self.confirm_password_edit)
         
-        # Progress bar (hidden initially)
+        right_layout.addWidget(form_widget)
+        right_layout.addSpacing(10)
+        
+        # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
-        layout.addWidget(self.progress_bar)
+        self.progress_bar.setFixedHeight(3)
+        self.progress_bar.setTextVisible(False)
+        right_layout.addWidget(self.progress_bar)
         
-        # Buttons
-        button_layout = QHBoxLayout()
-        
-        self.register_btn = QPushButton('Create Account')
+        # Register button
+        self.register_btn = QPushButton('CREATE ACCOUNT')
         self.register_btn.setDefault(True)
+        self.register_btn.setFixedHeight(55)
+        self.register_btn.setFont(QFont('Open Sans', 13, QFont.Bold))
+        self.register_btn.setCursor(Qt.PointingHandCursor)
         self.register_btn.clicked.connect(self.register)
         
-        self.cancel_btn = QPushButton('Cancel')
-        self.cancel_btn.clicked.connect(self.reject)
+        right_layout.addWidget(self.register_btn)
         
-        button_layout.addWidget(self.register_btn)
-        button_layout.addWidget(self.cancel_btn)
+        # Sign in link
+        signin_widget = QWidget()
+        signin_layout = QHBoxLayout(signin_widget)
+        signin_layout.setContentsMargins(0, 0, 0, 0)
         
-        layout.addLayout(button_layout)
+        signin_text = QLabel("Already have an account?")
+        signin_text.setFont(QFont('Open Sans', 11))
+        signin_text.setStyleSheet("color: #7f8c8d;")
         
-        # Set layout
-        self.setLayout(layout)
+        self.back_btn = QPushButton('Sign In')
+        self.back_btn.setFlat(True)
+        self.back_btn.setFont(QFont('Open Sans', 11, QFont.Bold))
+        self.back_btn.setStyleSheet("color: #27ae60; border: none;")
+        self.back_btn.setCursor(Qt.PointingHandCursor)
+        self.back_btn.clicked.connect(self.reject)
         
-        # Connect Enter key to register
+        signin_layout.addStretch()
+        signin_layout.addWidget(signin_text)
+        signin_layout.addWidget(self.back_btn)
+        signin_layout.addStretch()
+        
+        right_layout.addWidget(signin_widget)
+        right_layout.addStretch()
+        
+        # Add both sides to main layout
+        main_layout.addWidget(left_widget)
+        main_layout.addWidget(right_widget, stretch=1)
+        
+        self.setLayout(main_layout)
+        
+        # Connect Enter key
         self.confirm_password_edit.returnPressed.connect(self.register)
         
-        # Apply same styling as login dialog
         self.setStyleSheet("""
             QDialog {
-                background-color: #f0f0f0;
-            }
-            QLineEdit {
-                padding: 8px;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-            QLineEdit:focus {
-                border-color: #0066cc;
-            }
-            QPushButton {
-                padding: 8px 16px;
-                font-size: 12px;
+                background-color: white;
                 border: none;
-                border-radius: 4px;
-                background-color: #28a745;
+            }
+            
+            QLineEdit {
+                background-color: #f8f9fa;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                padding: 12px 16px;
+                font-size: 13px;
+                color: #2c3e50;
+            }
+            
+            QLineEdit:focus {
+                border-color: #27ae60;
+                background-color: white;
+            }
+            
+            QLineEdit:hover {
+                border-color: #27ae60;
+            }
+            
+            QPushButton#register_btn {
+                background-color: #27ae60;
                 color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                letter-spacing: 1px;
             }
-            QPushButton:hover {
-                background-color: #218838;
+            
+            QPushButton#register_btn:hover {
+                background-color: #229954;
             }
-            QPushButton:pressed {
-                background-color: #1e7e34;
+            
+            QPushButton#register_btn:pressed {
+                background-color: #1e8449;
             }
-            QPushButton#cancel_btn {
-                background-color: #6c757d;
+            
+            QPushButton#register_btn:disabled {
+                background-color: #bdc3c7;
             }
-            QPushButton#cancel_btn:hover {
-                background-color: #545b62;
+            
+            QProgressBar {
+                border: none;
+                background-color: #ecf0f1;
+                border-radius: 2px;
+            }
+            
+            QProgressBar::chunk {
+                background-color: #27ae60;
+                border-radius: 2px;
             }
         """)
         
-        self.cancel_btn.setObjectName('cancel_btn')
+        self.register_btn.setObjectName('register_btn')
     
     def register(self):
         """Handle registration button click"""
@@ -393,10 +688,10 @@ class RegisterDialog(QDialog):
             self.confirm_password_edit.setFocus()
             return
         
-        # Show progress and disable buttons
+        # Show progress
         self.set_loading(True)
         
-        # Start registration in background thread
+        # Start registration
         self.auth_worker = AuthWorker(self.api_client, 'register', 
                                     username=username, password=password)
         self.auth_worker.success.connect(self.on_register_success)
@@ -418,11 +713,10 @@ class RegisterDialog(QDialog):
         """Set loading state"""
         self.progress_bar.setVisible(loading)
         if loading:
-            self.progress_bar.setRange(0, 0)  # Indeterminate progress
+            self.progress_bar.setRange(0, 0)
         
-        # Disable/enable form elements
         self.username_edit.setEnabled(not loading)
         self.password_edit.setEnabled(not loading)
         self.confirm_password_edit.setEnabled(not loading)
         self.register_btn.setEnabled(not loading)
-        self.cancel_btn.setEnabled(not loading)
+        self.back_btn.setEnabled(not loading)

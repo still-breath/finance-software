@@ -70,57 +70,93 @@ class AddTransactionDialog(QWidget):
     def initUI(self):
         """Initialize add transaction dialog UI"""
         self.setWindowTitle('Add New Transaction')
-        self.setFixedSize(400, 300)
+        self.setFixedSize(480, 550)
         
         # Main layout
         layout = QVBoxLayout()
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(25)
         
         # Title
-        title = QLabel('Add New Transaction')
-        title_font = QFont()
-        title_font.setPointSize(14)
-        title_font.setBold(True)
+        title = QLabel('💳 Add New Transaction')
+        title_font = QFont('Segoe UI', 22, QFont.Bold)
         title.setFont(title_font)
         title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("color: #1a202c; margin-bottom: 10px;")
         layout.addWidget(title)
         
+        subtitle = QLabel('Enter transaction details below')
+        subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setStyleSheet("color: #64748b; font-size: 12px; margin-bottom: 15px;")
+        layout.addWidget(subtitle)
+        
         # Form layout
-        form_layout = QFormLayout()
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(18)
         
         # Description field
+        desc_label = QLabel('Description')
+        desc_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+        desc_label.setStyleSheet("color: #2d3748; font-weight: 600;")
+        form_layout.addWidget(desc_label)
+        
         self.description_edit = QLineEdit()
         self.description_edit.setPlaceholderText('Enter transaction description')
-        form_layout.addRow('Description:', self.description_edit)
+        self.description_edit.setFont(QFont('Segoe UI', 12))
+        form_layout.addWidget(self.description_edit)
         
         # Amount field
+        amount_label = QLabel('Amount')
+        amount_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+        amount_label.setStyleSheet("color: #2d3748; font-weight: 600;")
+        form_layout.addWidget(amount_label)
+        
         self.amount_spinbox = QDoubleSpinBox()
         self.amount_spinbox.setRange(-999999.99, 999999.99)
         self.amount_spinbox.setDecimals(2)
         self.amount_spinbox.setSuffix(' IDR')
-        form_layout.addRow('Amount:', self.amount_spinbox)
+        self.amount_spinbox.setFont(QFont('Segoe UI', 12))
+        form_layout.addWidget(self.amount_spinbox)
         
         # Date field
+        date_label = QLabel('Date')
+        date_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+        date_label.setStyleSheet("color: #2d3748; font-weight: 600;")
+        form_layout.addWidget(date_label)
+        
         self.date_edit = QDateEdit()
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.setCalendarPopup(True)
-        form_layout.addRow('Date:', self.date_edit)
+        self.date_edit.setFont(QFont('Segoe UI', 12))
+        form_layout.addWidget(self.date_edit)
         
         # Category field
+        category_label = QLabel('Category')
+        category_label.setFont(QFont('Segoe UI', 11, QFont.Medium))
+        category_label.setStyleSheet("color: #2d3748; font-weight: 600;")
+        form_layout.addWidget(category_label)
+        
         self.category_combo = QComboBox()
         self.category_combo.addItem('-- Select Category --', None)
         for category in self.categories:
             self.category_combo.addItem(category['name'], category['id'])
-        form_layout.addRow('Category:', self.category_combo)
+        self.category_combo.setFont(QFont('Segoe UI', 12))
+        form_layout.addWidget(self.category_combo)
         
         layout.addLayout(form_layout)
         
         # Buttons
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(12)
         
         self.save_btn = QPushButton('Save Transaction')
+        self.save_btn.setFixedHeight(48)
+        self.save_btn.setFont(QFont('Segoe UI', 13, QFont.Bold))
         self.save_btn.clicked.connect(self.save_transaction)
         
         self.cancel_btn = QPushButton('Cancel')
+        self.cancel_btn.setFixedHeight(48)
+        self.cancel_btn.setFont(QFont('Segoe UI', 13))
         self.cancel_btn.clicked.connect(self.close)
         
         button_layout.addWidget(self.save_btn)
@@ -134,42 +170,62 @@ class AddTransactionDialog(QWidget):
         # Apply styling
         self.setStyleSheet("""
             QWidget {
-                background-color: #f5f5f5;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #f8fafc, stop:1 #e2e8f0);
                 font-family: 'Segoe UI', Arial, sans-serif;
             }
+            
             QLineEdit, QDoubleSpinBox, QDateEdit, QComboBox {
-                padding: 8px;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                font-size: 12px;
+                padding: 14px 18px;
+                border: 2px solid #e2e8f0;
+                border-radius: 10px;
+                font-size: 13px;
+                background-color: white;
+                color: #2d3748;
+            }
+            
+            QLineEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus, QComboBox:focus {
+                border-color: #667eea;
                 background-color: white;
             }
-            QLineEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus, QComboBox:focus {
-                border-color: #0066cc;
+            
+            QLineEdit:hover, QDoubleSpinBox:hover, QDateEdit:hover, QComboBox:hover {
+                border-color: #cbd5e0;
             }
+            
             QPushButton {
-                padding: 8px 16px;
-                font-size: 12px;
+                padding: 12px 20px;
+                font-size: 13px;
                 border: none;
-                border-radius: 4px;
-                background-color: #28a745;
-                color: white;
+                border-radius: 10px;
                 font-weight: bold;
             }
-            QPushButton:hover {
-                background-color: #218838;
+            
+            QPushButton#save_btn {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #10b981, stop:1 #059669);
+                color: white;
             }
-            QPushButton:pressed {
-                background-color: #1e7e34;
+            
+            QPushButton#save_btn:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #059669, stop:1 #047857);
             }
-            QPushButton[objectName="cancel_btn"] {
-                background-color: #6c757d;
+            
+            QPushButton#cancel_btn {
+                background-color: white;
+                color: #64748b;
+                border: 2px solid #e2e8f0;
             }
-            QPushButton[objectName="cancel_btn"]:hover {
-                background-color: #545b62;
+            
+            QPushButton#cancel_btn:hover {
+                background-color: #f56565;
+                color: white;
+                border-color: #f56565;
             }
         """)
         
+        self.save_btn.setObjectName('save_btn')
         self.cancel_btn.setObjectName('cancel_btn')
     
     def save_transaction(self):
@@ -254,20 +310,25 @@ class TransactionListWidget(QWidget):
     def initUI(self):
         """Initialize transaction list UI"""
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
         
         # Header
         header_layout = QHBoxLayout()
         
-        title = QLabel('Transactions')
-        title_font = QFont()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
+        title = QLabel('💳 Transactions')
+        title_font = QFont('Segoe UI', 24, QFont.Bold)
         title.setFont(title_font)
+        title.setStyleSheet("color: #1a202c;")
         
-        self.add_btn = QPushButton('Add Transaction')
+        self.add_btn = QPushButton('+ Add Transaction')
+        self.add_btn.setFixedHeight(42)
+        self.add_btn.setFont(QFont('Segoe UI', 12, QFont.Bold))
         self.add_btn.clicked.connect(self.show_add_dialog)
         
-        self.refresh_btn = QPushButton('Refresh')
+        self.refresh_btn = QPushButton('🔄 Refresh')
+        self.refresh_btn.setFixedHeight(42)
+        self.refresh_btn.setFont(QFont('Segoe UI', 12))
         self.refresh_btn.clicked.connect(self.load_transactions)
         
         header_layout.addWidget(title)
@@ -286,11 +347,11 @@ class TransactionListWidget(QWidget):
         
         # Set column widths
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Date
-        header.setSectionResizeMode(1, QHeaderView.Stretch)           # Description
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Amount
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Category
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Actions
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         
         # Hide ID column
         self.table.setColumnHidden(5, True)
@@ -308,41 +369,66 @@ class TransactionListWidget(QWidget):
         # Apply styling
         self.setStyleSheet("""
             QWidget {
-                background-color: #f8f9fa;
+                background-color: #f8fafc;
                 font-family: 'Segoe UI', Arial, sans-serif;
             }
+            
             QPushButton {
-                padding: 8px 16px;
+                padding: 10px 20px;
                 font-size: 12px;
                 border: none;
-                border-radius: 4px;
-                background-color: #007bff;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+            
+            QPushButton#add_btn {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #667eea, stop:1 #764ba2);
                 color: white;
-                font-weight: bold;
             }
-            QPushButton:hover {
-                background-color: #0056b3;
+            
+            QPushButton#add_btn:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #5a67d8, stop:1 #6b46c1);
             }
-            QPushButton:pressed {
-                background-color: #004085;
-            }
-            QTableWidget {
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
+            
+            QPushButton#refresh_btn {
                 background-color: white;
-                selection-background-color: #e3f2fd;
+                color: #64748b;
+                border: 2px solid #e2e8f0;
             }
+            
+            QPushButton#refresh_btn:hover {
+                background-color: #f1f5f9;
+                color: #475569;
+            }
+            
+            QTableWidget {
+                border: none;
+                border-radius: 12px;
+                background-color: white;
+                selection-background-color: #e0e7ff;
+                gridline-color: #f1f5f9;
+            }
+            
             QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #dee2e6;
+                padding: 12px 8px;
+                border-bottom: 1px solid #f1f5f9;
             }
+            
             QHeaderView::section {
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                padding: 8px;
+                background-color: #f8fafc;
+                border: none;
+                border-bottom: 2px solid #e2e8f0;
+                padding: 12px 8px;
                 font-weight: bold;
+                color: #475569;
+                font-size: 12px;
             }
         """)
+        
+        self.add_btn.setObjectName('add_btn')
+        self.refresh_btn.setObjectName('refresh_btn')
     
     def load_categories(self):
         """Load categories from backend"""
@@ -384,7 +470,7 @@ class TransactionListWidget(QWidget):
         
         for row, transaction in enumerate(self.transactions):
             # Date
-            date_str = transaction.get('transaction_date', '')[:10]  # Extract date part
+            date_str = transaction.get('transaction_date', '')[:10]
             date_item = QTableWidgetItem(date_str)
             self.table.setItem(row, 0, date_item)
             
@@ -396,9 +482,9 @@ class TransactionListWidget(QWidget):
             amount = transaction.get('amount', 0)
             amount_item = QTableWidgetItem(f"Rp {amount:,.2f}")
             if amount < 0:
-                amount_item.setForeground(QColor('red'))
+                amount_item.setForeground(QColor('#ef4444'))
             else:
-                amount_item.setForeground(QColor('green'))
+                amount_item.setForeground(QColor('#10b981'))
             self.table.setItem(row, 2, amount_item)
             
             # Category
@@ -421,17 +507,43 @@ class TransactionListWidget(QWidget):
         widget = QWidget()
         layout = QHBoxLayout()
         layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(6)
         
         # Recategorize button (AI)
-        recategorize_btn = QPushButton('AI Categorize')
-        recategorize_btn.setFixedSize(80, 24)
+        recategorize_btn = QPushButton('🤖 AI')
+        recategorize_btn.setFixedSize(65, 28)
+        recategorize_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #8b5cf6, stop:1 #6366f1);
+                color: white;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #7c3aed, stop:1 #4f46e5);
+            }
+        """)
         recategorize_btn.clicked.connect(
             lambda: self.recategorize_transaction(transaction['id'])
         )
         
         # Delete button
-        delete_btn = QPushButton('Delete')
-        delete_btn.setFixedSize(60, 24)
+        delete_btn = QPushButton('🗑️')
+        delete_btn.setFixedSize(40, 28)
+        delete_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #fee2e2;
+                color: #dc2626;
+                border-radius: 6px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #fca5a5;
+            }
+        """)
         delete_btn.clicked.connect(
             lambda: self.delete_transaction(transaction['id'])
         )
@@ -453,7 +565,7 @@ class TransactionListWidget(QWidget):
     def on_transaction_added(self, result):
         """Handle new transaction added"""
         log_user_action("transaction_added", "TransactionListWidget")
-        self.load_transactions()  # Reload to get latest data
+        self.load_transactions()
     
     def recategorize_transaction(self, transaction_id):
         """Recategorize transaction using AI"""
@@ -480,7 +592,7 @@ class TransactionListWidget(QWidget):
         """Handle successful recategorization"""
         log_user_action("recategorize_success", "TransactionListWidget")
         QMessageBox.information(self, 'Success', 'Transaction recategorized successfully!')
-        self.load_transactions()  # Reload to show updated category
+        self.load_transactions()
     
     def on_recategorize_error(self, error_message):
         """Handle recategorization error"""
@@ -511,7 +623,7 @@ class TransactionListWidget(QWidget):
         """Handle successful deletion"""
         log_user_action("delete_success", "TransactionListWidget")
         QMessageBox.information(self, 'Success', 'Transaction deleted successfully!')
-        self.load_transactions()  # Reload to remove deleted item
+        self.load_transactions()
     
     def on_delete_error(self, error_message):
         """Handle deletion error"""
@@ -524,6 +636,6 @@ class TransactionListWidget(QWidget):
         self.table.setEnabled(not loading)
         
         if loading:
-            self.refresh_btn.setText('Loading...')
+            self.refresh_btn.setText('⏳ Loading...')
         else:
-            self.refresh_btn.setText('Refresh')
+            self.refresh_btn.setText('🔄 Refresh')
