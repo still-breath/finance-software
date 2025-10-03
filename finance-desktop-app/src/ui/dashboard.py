@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from api.client import APIClient
 from utils.logger import log_user_action, log_app_event, log_window_event
+from .transactions import TransactionListWidget
 
 class MetricCard(QFrame):
     """Custom metric card widget"""
@@ -251,7 +252,7 @@ class DashboardWindow(QMainWindow):
         
         nav_items = [
             ('🏠  Dashboard', 'overview'),
-            ('📁  Files', 'transactions'),
+            ('�  Transactions', 'transactions'),
             ('✉️  Messages', 'messages'),
             ('🔔  Notifications', 'notifications'),
             ('📍  Location', 'location'),
@@ -322,7 +323,7 @@ class DashboardWindow(QMainWindow):
         
         # Create pages
         self.overview_page = self.create_overview_page()
-        self.transactions_page = self.create_placeholder_page('📁 Files', 'File management coming soon')
+        self.transactions_page = self.create_transactions_page()
         self.messages_page = self.create_placeholder_page('✉️ Messages', 'Messaging features coming soon')
         self.notifications_page = self.create_placeholder_page('🔔 Notifications', 'Notifications coming soon')
         self.location_page = self.create_placeholder_page('📍 Location', 'Location features coming soon')
@@ -348,10 +349,10 @@ class DashboardWindow(QMainWindow):
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(20)
         
-        self.earning_card = MetricCard('Earning', '$ 628', '💵', '#3498db')
-        self.share_card = MetricCard('Share', '2434', '🔗', '#f39c12')
-        self.likes_card = MetricCard('Likes', '1259', '👍', '#e74c3c')
-        self.rating_card = MetricCard('Rating', '8.5', '⭐', '#f39c12')
+        self.earning_card = MetricCard('Total Income', 'IDR 0', '💵', '#27ae60')
+        self.share_card = MetricCard('Transactions', '0', '�', '#3498db')
+        self.likes_card = MetricCard('Categories', '0', '�', '#e74c3c')
+        self.rating_card = MetricCard('Avg. Amount', 'IDR 0', '📊', '#f39c12')
         
         cards_layout.addWidget(self.earning_card)
         cards_layout.addWidget(self.share_card)
@@ -657,6 +658,25 @@ class DashboardWindow(QMainWindow):
         
         return widget
     
+    def create_transactions_page(self):
+        try:
+            # Create TransactionListWidget which handles all transaction CRUD operations
+            transaction_widget = TransactionListWidget(self.api_client)
+            
+            # Wrap in a container for consistent styling
+            page = QWidget()
+            page.setStyleSheet("background-color: transparent;")
+            layout = QVBoxLayout(page)
+            layout.setContentsMargins(0, 20, 0, 0)
+            layout.addWidget(transaction_widget)
+            
+            return page
+            
+        except Exception as e:
+            log_app_event("transactions_page_error", "DashboardWindow", {"error": str(e)})
+            # Fallback to placeholder if there's an error
+            return self.create_placeholder_page('💳 Transactions', f'Error loading transactions: {str(e)}')
+    
     def create_placeholder_page(self, title: str, subtitle: str):
         """Create placeholder page"""
         page = QWidget()
@@ -708,7 +728,7 @@ class DashboardWindow(QMainWindow):
             # Update page title
             page_titles = {
                 'overview': 'Dashboard',
-                'transactions': 'Files',
+                'transactions': 'Transactions',
                 'messages': 'Messages',
                 'notifications': 'Notifications',
                 'location': 'Location',
@@ -738,10 +758,57 @@ class DashboardWindow(QMainWindow):
         """)
     
     def load_dashboard_data(self):
-        """Load dashboard data"""
         log_app_event("dashboard_data_load_started", "DashboardWindow")
-        # Load real data from API here
-        pass
+        
+        # Load transaction summary for metrics cards
+        try:
+            summary_data = self.api_client.get_transaction_summary()
+            self.update_metrics_cards(summary_data)
+        except Exception as e:
+            log_app_event("dashboard_summary_error", "DashboardWindow", {"error": str(e)})
+            print(f"Failed to load transaction summary: {e}")
+        
+        # Load monthly stats for charts
+        try:
+            monthly_data = self.api_client.get_monthly_stats()
+            self.update_charts_data(monthly_data)
+        except Exception as e:
+            log_app_event("dashboard_monthly_error", "DashboardWindow", {"error": str(e)})
+            print(f"Failed to load monthly stats: {e}")
+    
+    def update_metrics_cards(self, summary_data):
+        """Update metrics cards with real data"""
+        try:
+            if not summary_data:
+                return
+            
+            # Update earnings card
+            total_income = summary_data.get('total_income', 0)
+            self.earning_card.value_label.setText(f"IDR {total_income:,.0f}")
+            
+            # Update transaction count
+            total_transactions = summary_data.get('total_transactions', 0)
+            self.share_card.value_label.setText(str(total_transactions))
+            
+            # Update categories count
+            categories_count = summary_data.get('categories_count', 0)
+            self.likes_card.value_label.setText(str(categories_count))
+            
+            # Update average transaction amount
+            avg_amount = summary_data.get('average_amount', 0)
+            self.rating_card.value_label.setText(f"IDR {avg_amount:,.0f}")
+            
+            log_app_event("metrics_updated", "DashboardWindow", summary_data)
+            
+        except Exception as e:
+            log_app_event("metrics_update_error", "DashboardWindow", {"error": str(e)})
+    
+    def update_charts_data(self, monthly_data):
+        """Update charts with monthly data"""
+        try:
+            log_app_event("charts_data_loaded", "DashboardWindow", {"months": len(monthly_data.get('months', []))})
+        except Exception as e:
+            log_app_event("charts_update_error", "DashboardWindow", {"error": str(e)})
     
     def ensure_visible(self):
         self.show()

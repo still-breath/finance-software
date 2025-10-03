@@ -167,6 +167,22 @@ class APIClient:
     def is_authenticated(self) -> bool:
         return self.token is not None
     
+    def get_transaction_summary(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/stats/summary')
+    
+    def get_monthly_stats(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/stats/monthly')
+    
+    def get_category_stats(self) -> Dict[str, Any]:
+        return self._make_request('GET', '/api/v1/categories/stats')
+    
+    def suggest_categories(self, description: str) -> Dict[str, Any]:
+        return self._make_request('GET', f'/api/v1/categories/suggest?description={description}')
+    
+    def batch_recategorize(self, transaction_ids: list) -> Dict[str, Any]:
+        data = {"transaction_ids": transaction_ids}
+        return self._make_request('POST', '/api/v1/transactions/batch-recategorize', data)
+    
     def test_connection(self) -> bool:
         try:
             response = self.session.get(f"{self.base_url}/health", timeout=5)

@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
                            QLineEdit, QPushButton, QLabel, QTableWidget, 
                            QTableWidgetItem, QMessageBox, QComboBox, QDateEdit,
                            QDoubleSpinBox, QHeaderView, QAbstractItemView, QMenu, QAction)
-from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QColor
 import sys
 import os
@@ -65,6 +65,11 @@ class AddTransactionDialog(QWidget):
         self.api_client = api_client
         self.categories = categories
         self.worker = None
+        
+        self.ai_timer = QTimer()
+        self.ai_timer.setSingleShot(True)
+        self.ai_timer.timeout.connect(self.get_ai_suggestion)
+        
         self.initUI()
     
     def initUI(self):
@@ -103,7 +108,14 @@ class AddTransactionDialog(QWidget):
         self.description_edit = QLineEdit()
         self.description_edit.setPlaceholderText('Enter transaction description')
         self.description_edit.setFont(QFont('Segoe UI', 12))
+        self.description_edit.textChanged.connect(self.on_description_changed)
         form_layout.addWidget(self.description_edit)
+        
+        self.ai_suggestion_label = QLabel()
+        self.ai_suggestion_label.setFont(QFont('Segoe UI', 10))
+        self.ai_suggestion_label.setStyleSheet("color: #3498db; margin-top: 5px;")
+        self.ai_suggestion_label.hide()
+        form_layout.addWidget(self.ai_suggestion_label)
         
         # Amount field
         amount_label = QLabel('Amount')
@@ -279,6 +291,53 @@ class AddTransactionDialog(QWidget):
         """Handle save error"""
         self.set_loading(False)
         QMessageBox.critical(self, 'Error', f'Failed to save transaction: {error_message}')
+    
+    def on_description_changed(self):
+        # Stop previous timer
+        self.ai_timer.stop()
+        
+        description = self.description_edit.text().strip()
+        if len(description) >= 3:  # Only suggest for descriptions with 3+ characters
+            # Start timer for debounced AI suggestion
+            self.ai_timer.start(1000)  # 1 second delay
+            self.ai_suggestion_label.setText("🤖 Getting AI suggestion...")
+            self.ai_suggestion_label.show()
+        else:
+            self.ai_suggestion_label.hide()
+    
+    def get_ai_suggestion(self):
+        description = self.description_edit.text().strip()
+        if not description:
+            self.ai_suggestion_label.hide()
+            return
+        
+        try:
+            # Get AI suggestion from backend
+            suggestion_data = self.api_client.suggest_categories(description)
+            if suggestion_data and 'predicted_category' in suggestion_data:
+                category = suggestion_data['predicted_category']
+                confidence = suggestion_data.get('confidence', 0)
+                
+                self.ai_suggestion_label.setText(
+                    f"🤖 AI suggests: {category} ({confidence:.0%} confidence)"
+                )
+                
+                # Auto-select the suggested category if confidence is high
+                if confidence >= 0.8:
+                    self.auto_select_category(category)
+                    
+            else:
+                self.ai_suggestion_label.setText("🤖 No AI suggestion available")
+                
+        except Exception as e:
+            log_user_action("ai_suggestion_error", "AddTransactionDialog", {"error": str(e)})
+            self.ai_suggestion_label.setText("🤖 AI suggestion unavailable")
+    
+    def auto_select_category(self, category_name: str):
+        for i in range(self.category_combo.count()):
+            if self.category_combo.itemText(i) == category_name:
+                self.category_combo.setCurrentIndex(i)
+                break
     
     def set_loading(self, loading: bool):
         """Set loading state"""
