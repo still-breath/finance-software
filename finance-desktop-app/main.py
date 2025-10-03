@@ -130,7 +130,6 @@ class MainWindow(QWidget):
     def apply_modern_styling(self):
         self.setStyleSheet("""
             QWidget {
-                background-color: #ecf0f1;
                 font-family: 'Open Sans', Arial, sans-serif;
             }
             
@@ -249,7 +248,7 @@ class MainWindow(QWidget):
             # Try simple dashboard first for debugging
             print(f"Attempting to create dashboard for user: {self.current_user}")
             
-            self.dashboard = UltraSimpleDashboard(self.api_client, self.current_user, None)
+            self.dashboard = DashboardWindow(self.api_client, self.current_user, None)
             self.dashboard.logout_requested.connect(self.on_logout)
             
             print("Dashboard created, showing...")
@@ -260,7 +259,7 @@ class MainWindow(QWidget):
             # Don't hide main window immediately - let dashboard stabilize first
             print("Dashboard shown, keeping main window for stability...")
             
-            log_window_event("UltraSimpleDashboard", "opened")
+            log_window_event("DashboardWindow", "opened")
             print("Dashboard should be visible now")
             
         except Exception as e:

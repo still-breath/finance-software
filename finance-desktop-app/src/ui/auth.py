@@ -1,6 +1,6 @@
 """
 Authentication UI components for Finance Desktop Application
-Login and Registration forms with modern design
+Login and Registration forms with modern design - FIXED VERSION
 """
 
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
@@ -60,7 +60,7 @@ class LoginDialog(QDialog):
     
     def initUI(self):
         self.setWindowTitle('Finance Manager')
-        self.setFixedSize(900, 600)
+        self.setFixedSize(900, 650)  # Increased height to fit all elements
         self.setModal(True)
         
         # Main layout - horizontal split
@@ -72,8 +72,8 @@ class LoginDialog(QDialog):
         left_widget = QWidget()
         left_widget.setStyleSheet("background-color: white;")
         left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(60, 50, 60, 50)
-        left_layout.setSpacing(25)
+        left_layout.setContentsMargins(50, 30, 50, 30)  # Reduced margins
+        left_layout.setSpacing(10)  # Reduced spacing
         
         # Logo section
         logo_container = QWidget()
@@ -82,10 +82,10 @@ class LoginDialog(QDialog):
         logo_layout.setSpacing(10)
         
         logo_label = QLabel('💰')
-        logo_label.setFont(QFont('Open Sans', 28))
+        logo_label.setFont(QFont('Open Sans', 24))
         
         logo_text = QLabel('Finance Manager')
-        logo_text.setFont(QFont('Open Sans', 16, QFont.Bold))
+        logo_text.setFont(QFont('Open Sans', 14, QFont.Bold))
         logo_text.setStyleSheet("color: #2c3e50;")
         
         logo_layout.addWidget(logo_label)
@@ -93,55 +93,57 @@ class LoginDialog(QDialog):
         logo_layout.addStretch()
         
         left_layout.addWidget(logo_container)
-        left_layout.addSpacing(20)
+        left_layout.addSpacing(10)
         
         # Welcome text
         welcome_title = QLabel('Welcome Back!')
-        welcome_title.setFont(QFont('Open Sans', 28, QFont.Bold))
+        welcome_title.setFont(QFont('Open Sans', 24, QFont.Bold))
         welcome_title.setStyleSheet("color: #2c3e50;")
         
         welcome_subtitle = QLabel('Please login to your account')
-        welcome_subtitle.setFont(QFont('Open Sans', 12))
+        welcome_subtitle.setFont(QFont('Open Sans', 11))
         welcome_subtitle.setStyleSheet("color: #7f8c8d;")
         
         left_layout.addWidget(welcome_title)
         left_layout.addWidget(welcome_subtitle)
         left_layout.addSpacing(15)
         
-        # Form fields
-        form_widget = QWidget()
-        form_layout = QVBoxLayout(form_widget)
-        form_layout.setSpacing(20)
-        
         # Username field
         username_label = QLabel('Username')
         username_label.setFont(QFont('Open Sans', 11, QFont.Medium))
-        username_label.setStyleSheet("color: #2c3e50;")
+        username_label.setStyleSheet("color: #2c3e50; margin-bottom: 5px;")
+        left_layout.addWidget(username_label)
         
         self.username_edit = QLineEdit()
         self.username_edit.setPlaceholderText('Enter your username')
         self.username_edit.setFont(QFont('Open Sans', 12))
-        self.username_edit.setMinimumHeight(50)
+        self.username_edit.setFixedHeight(45)
+        self.username_edit.setObjectName('username_input')
+        left_layout.addWidget(self.username_edit)
         
-        form_layout.addWidget(username_label)
-        form_layout.addWidget(self.username_edit)
+        left_layout.addSpacing(10)
         
         # Password field
         password_label = QLabel('Password')
         password_label.setFont(QFont('Open Sans', 11, QFont.Medium))
-        password_label.setStyleSheet("color: #2c3e50;")
+        password_label.setStyleSheet("color: #2c3e50; margin-bottom: 5px;")
+        left_layout.addWidget(password_label)
         
         self.password_edit = QLineEdit()
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setPlaceholderText('Enter your password')
         self.password_edit.setFont(QFont('Open Sans', 12))
-        self.password_edit.setMinimumHeight(50)
+        self.password_edit.setFixedHeight(45)
+        self.password_edit.setObjectName('password_input')
+        left_layout.addWidget(self.password_edit)
         
-        form_layout.addWidget(password_label)
-        form_layout.addWidget(self.password_edit)
+        left_layout.addSpacing(8)
         
-        # Remember me
-        remember_layout = QHBoxLayout()
+        # Remember me and Forgot password
+        remember_widget = QWidget()
+        remember_layout = QHBoxLayout(remember_widget)
+        remember_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.remember_cb = QCheckBox('Remember me')
         self.remember_cb.setFont(QFont('Open Sans', 10))
         self.remember_cb.setStyleSheet("color: #7f8c8d;")
@@ -156,10 +158,8 @@ class LoginDialog(QDialog):
         remember_layout.addStretch()
         remember_layout.addWidget(forgot_btn)
         
-        form_layout.addLayout(remember_layout)
-        
-        left_layout.addWidget(form_widget)
-        left_layout.addSpacing(10)
+        left_layout.addWidget(remember_widget)
+        left_layout.addSpacing(15)
         
         # Progress bar
         self.progress_bar = QProgressBar()
@@ -168,15 +168,20 @@ class LoginDialog(QDialog):
         self.progress_bar.setTextVisible(False)
         left_layout.addWidget(self.progress_bar)
         
+        left_layout.addSpacing(3)
+        
         # Login button
         self.login_btn = QPushButton('LOGIN')
         self.login_btn.setDefault(True)
-        self.login_btn.setFixedHeight(55)
-        self.login_btn.setFont(QFont('Open Sans', 13, QFont.Bold))
+        self.login_btn.setFixedHeight(48)
+        self.login_btn.setFont(QFont('Open Sans', 12, QFont.Bold))
         self.login_btn.setCursor(Qt.PointingHandCursor)
+        self.login_btn.setObjectName('login_btn')
         self.login_btn.clicked.connect(self.login)
         
         left_layout.addWidget(self.login_btn)
+        
+        left_layout.addSpacing(12)
         
         # Sign up link
         signup_widget = QWidget()
@@ -207,7 +212,7 @@ class LoginDialog(QDialog):
         right_widget.setFixedWidth(350)
         right_widget.setStyleSheet("""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #3498db, stop:1 #2980b9);
+                stop:0 #3498db);
         """)
         
         right_layout = QVBoxLayout(right_widget)
@@ -216,12 +221,12 @@ class LoginDialog(QDialog):
         
         # Illustration
         illustration = QLabel('📊')
-        illustration.setFont(QFont('Open Sans', 120))
+        illustration.setFont(QFont('Open Sans', 100))
         illustration.setAlignment(Qt.AlignCenter)
         
         # Text on right panel
         right_title = QLabel('Financial Management')
-        right_title.setFont(QFont('Open Sans', 20, QFont.Bold))
+        right_title.setFont(QFont('Open Sans', 18, QFont.Bold))
         right_title.setStyleSheet("color: white;")
         right_title.setAlignment(Qt.AlignCenter)
         right_title.setWordWrap(True)
@@ -262,7 +267,7 @@ class LoginDialog(QDialog):
                 background-color: #f8f9fa;
                 border: 2px solid #e9ecef;
                 border-radius: 8px;
-                padding: 12px 16px;
+                padding: 0px 16px;
                 font-size: 13px;
                 color: #2c3e50;
             }
@@ -270,10 +275,11 @@ class LoginDialog(QDialog):
             QLineEdit:focus {
                 border-color: #3498db;
                 background-color: white;
+                outline: none;
             }
             
             QLineEdit:hover {
-                border-color: #3498db;
+                border-color: #bdc3c7;
             }
             
             QPushButton#login_btn {
@@ -281,7 +287,7 @@ class LoginDialog(QDialog):
                 color: white;
                 border: none;
                 border-radius: 8px;
-                font-weight: 600;
+                font-weight: bold;
                 letter-spacing: 1px;
             }
             
@@ -297,12 +303,20 @@ class LoginDialog(QDialog):
                 background-color: #bdc3c7;
             }
             
+            QCheckBox {
+                spacing: 8px;
+            }
+            
             QCheckBox::indicator {
                 width: 18px;
                 height: 18px;
                 border-radius: 4px;
                 border: 2px solid #bdc3c7;
                 background-color: white;
+            }
+            
+            QCheckBox::indicator:hover {
+                border-color: #3498db;
             }
             
             QCheckBox::indicator:checked {
@@ -412,7 +426,7 @@ class RegisterDialog(QDialog):
     def initUI(self):
         """Initialize registration dialog UI"""
         self.setWindowTitle('Create Account')
-        self.setFixedSize(900, 600)
+        self.setFixedSize(900, 700)  # Increased height
         self.setModal(True)
         
         # Main layout - horizontal split
@@ -434,12 +448,12 @@ class RegisterDialog(QDialog):
         
         # Illustration
         illustration = QLabel('🚀')
-        illustration.setFont(QFont('Open Sans', 120))
+        illustration.setFont(QFont('Open Sans', 100))
         illustration.setAlignment(Qt.AlignCenter)
         
         # Text on left panel
         left_title = QLabel('Join Us Today')
-        left_title.setFont(QFont('Open Sans', 20, QFont.Bold))
+        left_title.setFont(QFont('Open Sans', 18, QFont.Bold))
         left_title.setStyleSheet("color: white;")
         left_title.setAlignment(Qt.AlignCenter)
         left_title.setWordWrap(True)
@@ -462,8 +476,8 @@ class RegisterDialog(QDialog):
         right_widget = QWidget()
         right_widget.setStyleSheet("background-color: white;")
         right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(60, 50, 60, 50)
-        right_layout.setSpacing(25)
+        right_layout.setContentsMargins(50, 40, 50, 40)  # Reduced margins
+        right_layout.setSpacing(12)  # Reduced spacing
         
         # Logo section
         logo_container = QWidget()
@@ -472,10 +486,10 @@ class RegisterDialog(QDialog):
         logo_layout.setSpacing(10)
         
         logo_label = QLabel('💰')
-        logo_label.setFont(QFont('Open Sans', 28))
+        logo_label.setFont(QFont('Open Sans', 24))
         
         logo_text = QLabel('Finance Manager')
-        logo_text.setFont(QFont('Open Sans', 16, QFont.Bold))
+        logo_text.setFont(QFont('Open Sans', 14, QFont.Bold))
         logo_text.setStyleSheet("color: #2c3e50;")
         
         logo_layout.addWidget(logo_label)
@@ -483,15 +497,15 @@ class RegisterDialog(QDialog):
         logo_layout.addStretch()
         
         right_layout.addWidget(logo_container)
-        right_layout.addSpacing(20)
+        right_layout.addSpacing(15)
         
         # Title
         title = QLabel('Create Account')
-        title.setFont(QFont('Open Sans', 28, QFont.Bold))
+        title.setFont(QFont('Open Sans', 24, QFont.Bold))
         title.setStyleSheet("color: #2c3e50;")
         
         subtitle = QLabel('Sign up to get started')
-        subtitle.setFont(QFont('Open Sans', 12))
+        subtitle.setFont(QFont('Open Sans', 11))
         subtitle.setStyleSheet("color: #7f8c8d;")
         
         right_layout.addWidget(title)
@@ -501,7 +515,7 @@ class RegisterDialog(QDialog):
         # Form fields
         form_widget = QWidget()
         form_layout = QVBoxLayout(form_widget)
-        form_layout.setSpacing(18)
+        form_layout.setSpacing(10)
         
         # Username field
         username_label = QLabel('Username')
@@ -511,7 +525,7 @@ class RegisterDialog(QDialog):
         self.username_edit = QLineEdit()
         self.username_edit.setPlaceholderText('Choose a username')
         self.username_edit.setFont(QFont('Open Sans', 12))
-        self.username_edit.setMinimumHeight(50)
+        self.username_edit.setMinimumHeight(45)
         
         form_layout.addWidget(username_label)
         form_layout.addWidget(self.username_edit)
@@ -525,7 +539,7 @@ class RegisterDialog(QDialog):
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setPlaceholderText('Create a strong password')
         self.password_edit.setFont(QFont('Open Sans', 12))
-        self.password_edit.setMinimumHeight(50)
+        self.password_edit.setMinimumHeight(45)
         
         form_layout.addWidget(password_label)
         form_layout.addWidget(self.password_edit)
@@ -539,7 +553,7 @@ class RegisterDialog(QDialog):
         self.confirm_password_edit.setEchoMode(QLineEdit.Password)
         self.confirm_password_edit.setPlaceholderText('Confirm your password')
         self.confirm_password_edit.setFont(QFont('Open Sans', 12))
-        self.confirm_password_edit.setMinimumHeight(50)
+        self.confirm_password_edit.setMinimumHeight(45)
         
         form_layout.addWidget(confirm_label)
         form_layout.addWidget(self.confirm_password_edit)
@@ -554,15 +568,19 @@ class RegisterDialog(QDialog):
         self.progress_bar.setTextVisible(False)
         right_layout.addWidget(self.progress_bar)
         
+        right_layout.addSpacing(3)
+        
         # Register button
         self.register_btn = QPushButton('CREATE ACCOUNT')
         self.register_btn.setDefault(True)
-        self.register_btn.setFixedHeight(55)
-        self.register_btn.setFont(QFont('Open Sans', 13, QFont.Bold))
+        self.register_btn.setFixedHeight(48)
+        self.register_btn.setFont(QFont('Open Sans', 12, QFont.Bold))
         self.register_btn.setCursor(Qt.PointingHandCursor)
         self.register_btn.clicked.connect(self.register)
         
         right_layout.addWidget(self.register_btn)
+        
+        right_layout.addSpacing(12)
         
         # Sign in link
         signin_widget = QWidget()

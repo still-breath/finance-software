@@ -82,52 +82,84 @@ class DashboardWindow(QMainWindow):
         self.api_client = api_client
         self.user_data = user_data
         
-        log_window_event("DashboardWindow", "initializing", {
-            "user_id": user_data.get('id'),
-            "user_name": user_data.get('name')
-        })
+        print("DashboardWindow: Starting initialization...")
         
-        self.initUI()
-        self.load_dashboard_data()
-        
-        log_window_event("DashboardWindow", "initialization_complete")
+        try:
+            log_window_event("DashboardWindow", "initializing", {
+                "user_id": user_data.get('id'),
+                "user_name": user_data.get('name')
+            })
+            self.setAttribute(Qt.WA_QuitOnClose, False)  # Don't quit app when this window closes
+            self.setWindowFlags(Qt.Window)  # Make it a proper independent window
+            
+            print("DashboardWindow: Calling initUI...")
+            self.initUI()
+            
+            print("DashboardWindow: Loading dashboard data...")
+            self.load_dashboard_data()
+            
+            log_window_event("DashboardWindow", "initialization_complete")
+            print("DashboardWindow: Initialization complete")
+            
+        except Exception as e:
+            print(f"DashboardWindow: Error in init: {e}")
+            log_window_event("DashboardWindow", "initialization_error", {"error": str(e)})
+            raise
     
     def initUI(self):
         """Initialize dashboard UI"""
+        print("DashboardWindow: Setting window properties...")
         self.setWindowTitle('Dashboard - Finance Manager')
-        self.setGeometry(100, 100, 1400, 800)
+        self.setGeometry(100, 100, 1300, 750)
+
+        self.setMinimumSize(1200, 700)
+        self.setMaximumSize(1500, 900)
         
+        # Ensure window is visible and on top
         self.setWindowState(Qt.WindowNoState)
         self.activateWindow()
         self.raise_()
         
+        print("DashboardWindow: Creating central widget...")
         # Create central widget with background
         central_widget = QWidget()
         central_widget.setStyleSheet("background-color: #f0f2f5;")
         self.setCentralWidget(central_widget)
         
+        print("DashboardWindow: Creating main layout...")
         # Main layout
         main_layout = QHBoxLayout(central_widget)
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(0, 0, 0, 0)
         
+        print("DashboardWindow: Creating sidebar...")
         # Create sidebar
         self.create_sidebar()
         main_layout.addWidget(self.sidebar)
         
+        print("DashboardWindow: Creating content wrapper...")
         # Create content area with padding
         content_wrapper = QWidget()
         content_wrapper.setStyleSheet("background-color: #f0f2f5;")
         content_layout = QVBoxLayout(content_wrapper)
-        content_layout.setContentsMargins(25, 25, 25, 25)
+        content_layout.setContentsMargins(15, 15, 15, 15)
         
         # Create header
         self.create_header()
         content_layout.addWidget(self.header_widget)
         
+        # Create scrollable content area
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setFrameStyle(QFrame.NoFrame)
+        scroll_area.setStyleSheet("background-color: transparent;")
+        
         # Create content area
         self.create_content_area()
-        content_layout.addWidget(self.content_area, stretch=1)
+        scroll_area.setWidget(self.content_area)
+        content_layout.addWidget(scroll_area, stretch=1)
         
         main_layout.addWidget(content_wrapper, stretch=1)
         
@@ -144,7 +176,7 @@ class DashboardWindow(QMainWindow):
     def create_sidebar(self):
         """Create navigation sidebar"""
         self.sidebar = QFrame()
-        self.sidebar.setFixedWidth(280)
+        self.sidebar.setFixedWidth(250)
         self.sidebar.setFrameStyle(QFrame.NoFrame)
         self.sidebar.setStyleSheet("""
             QFrame {
@@ -161,12 +193,12 @@ class DashboardWindow(QMainWindow):
         user_container = QWidget()
         user_container.setStyleSheet("background-color: #34495e; border-bottom: 1px solid #1a252f;")
         user_layout = QVBoxLayout(user_container)
-        user_layout.setSpacing(10)
-        user_layout.setContentsMargins(30, 30, 30, 30)
+        user_layout.setSpacing(5)
+        user_layout.setContentsMargins(15, 15, 15, 15)
         
         # Avatar
         avatar_label = QLabel('👤')
-        avatar_label.setFont(QFont('Open Sans', 40))
+        avatar_label.setFont(QFont('Open Sans', 32))
         avatar_label.setAlignment(Qt.AlignCenter)
         avatar_label.setStyleSheet("color: white;")
         
@@ -192,6 +224,7 @@ class DashboardWindow(QMainWindow):
         # Navigation items
         self.nav_list = QListWidget()
         self.nav_list.setFrameStyle(QFrame.NoFrame)
+        self.nav_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.nav_list.setStyleSheet("""
             QListWidget {
                 background-color: transparent;
@@ -232,7 +265,6 @@ class DashboardWindow(QMainWindow):
             self.nav_list.addItem(item)
         
         sidebar_layout.addWidget(self.nav_list)
-        sidebar_layout.addStretch()
         
         # Logout button
         self.logout_btn = QPushButton('🚪  Logout')
@@ -256,7 +288,7 @@ class DashboardWindow(QMainWindow):
     def create_header(self):
         """Create header with title"""
         self.header_widget = QWidget()
-        self.header_widget.setFixedHeight(80)
+        self.header_widget.setFixedHeight(60)
         self.header_widget.setStyleSheet("""
             QWidget {
                 background-color: white;
@@ -277,7 +309,7 @@ class DashboardWindow(QMainWindow):
         
         # Title
         self.page_title = QLabel('Dashboard')
-        self.page_title.setFont(QFont('Open Sans', 24, QFont.Bold))
+        self.page_title.setFont(QFont('Open Sans', 22, QFont.Bold))
         self.page_title.setStyleSheet("color: #2c3e50;")
         
         header_layout.addWidget(self.page_title)
@@ -364,19 +396,19 @@ class DashboardWindow(QMainWindow):
             QFrame {
                 background-color: white;
                 border-radius: 12px;
-                padding: 20px;
+                padding: 10px;
             }
         """)
         
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(15)
         shadow.setXOffset(0)
-        shadow.setYOffset(3)
+        shadow.setYOffset(2)
         shadow.setColor(QColor(0, 0, 0, 30))
         widget.setGraphicsEffect(shadow)
         
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(20, 20, 20, 20)
         
         # Header
         header_layout = QHBoxLayout()
@@ -497,12 +529,13 @@ class DashboardWindow(QMainWindow):
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(15)
         shadow.setXOffset(0)
-        shadow.setYOffset(3)
+        shadow.setYOffset(2)
         shadow.setColor(QColor(0, 0, 0, 30))
         widget.setGraphicsEffect(shadow)
         
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(20, 12, 20, 20)  # Top margin lebih kecil
+        layout.setSpacing(8)  # Spacing antara legend dan chart
         
         # Legend
         legend_layout = QHBoxLayout()
