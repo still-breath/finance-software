@@ -578,14 +578,13 @@ class TransactionListWidget(QWidget):
         header.setSectionResizeMode(4, QHeaderView.Fixed)
         
         # Adjusted column widths: wider date & amount
-        self.table.setColumnWidth(0, 150)  # Date (wider to show full date/time if needed)
-        self.table.setColumnWidth(2, 170)  # Amount (wider so full formatted value fits)
+        self.table.setColumnWidth(0, 150)  # Date
+        self.table.setColumnWidth(2, 170)  # Amount
         self.table.setColumnWidth(3, 160)  # Category
         self.table.setColumnWidth(4, 140)  # Actions
         
-        # Allow dynamic row height for wrapped descriptions
         self.table.setWordWrap(True)
-        self.table.verticalHeader().setDefaultSectionSize(64)
+        self.table.verticalHeader().setDefaultSectionSize(52)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         
         # Hide ID column
@@ -649,10 +648,10 @@ class TransactionListWidget(QWidget):
             }
             
             QTableWidget::item {
-                padding: 22px 16px;
+                padding: 12px 14px;
                 border-bottom: 1px solid #f1f5f9;
                 color: #2d3748;
-                min-height: 60px;
+                min-height: 40px;
             }
             
             /* Date column - smaller font */
@@ -732,24 +731,23 @@ class TransactionListWidget(QWidget):
             # Date
             date_str = transaction.get('transaction_date', '')[:10]
             date_item = QTableWidgetItem(date_str)
-            # Smaller font for date column to save space
             date_item.setFont(QFont('Segoe UI', 10))
             self.table.setItem(row, 0, date_item)
             
             # Description
             description_text = transaction.get('description', '')
             desc_item = QTableWidgetItem(description_text)
-            # Enable text wrapping by setting size hint after insertion
             desc_item.setFont(QFont('Segoe UI', 11))
             desc_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
             self.table.setItem(row, 1, desc_item)
-            # Adjust row height based on content length (basic heuristic)
-            if len(description_text) > 45:
-                self.table.setRowHeight(row, 90)
-            elif len(description_text) > 90:
-                self.table.setRowHeight(row, 120)
-            else:
+
+            if len(description_text) > 90:
+                self.table.setRowHeight(row, 78)
+            elif len(description_text) > 45:
                 self.table.setRowHeight(row, 64)
+            else:
+                self.table.setRowHeight(row, 46)
             
             # Amount
             amount = transaction.get('amount', 0)
@@ -770,11 +768,9 @@ class TransactionListWidget(QWidget):
             category_item.setFont(QFont('Segoe UI', 11))
             self.table.setItem(row, 3, category_item)
             
-            # Actions (buttons will be added via cellWidget)
             actions_widget = self.create_action_buttons(transaction)
             self.table.setCellWidget(row, 4, actions_widget)
             
-            # ID (hidden)
             id_item = QTableWidgetItem(str(transaction.get('id', '')))
             self.table.setItem(row, 5, id_item)
         
@@ -783,40 +779,40 @@ class TransactionListWidget(QWidget):
     def create_action_buttons(self, transaction):
         widget = QWidget()
         layout = QHBoxLayout()
-        layout.setContentsMargins(4, 6, 4, 6)
-        layout.setSpacing(10)
+        layout.setContentsMargins(2, 4, 2, 4)
+        layout.setSpacing(6)
         layout.addStretch(1)
 
         recategorize_btn = QPushButton('🤖')
         recategorize_btn.setToolTip('Recategorize with AI')
-        recategorize_btn.setFixedSize(34, 34)
-        recategorize_btn.setFont(QFont('Segoe UI', 12))
-        recategorize_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #6366f1;
-                color: white;
-                border: none;
-                border-radius: 17px;
-                font-weight: bold;
-            }
-            QPushButton:hover { background-color: #4f46e5; }
-        """)
+        recategorize_btn.setFixedSize(26, 26)
+        recategorize_btn.setFont(QFont('Segoe UI', 10))
+        # recategorize_btn.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: #6366f1;
+        #         color: white;
+        #         border: none;
+        #         border-radius: 13px;
+        #         font-weight: bold;
+        #     }
+        #     QPushButton:hover { background-color: #4f46e5; }
+        # """)
         recategorize_btn.clicked.connect(lambda: self.recategorize_transaction(transaction['id']))
 
         delete_btn = QPushButton('🗑️')
         delete_btn.setToolTip('Delete transaction')
-        delete_btn.setFixedSize(34, 34)
-        delete_btn.setFont(QFont('Segoe UI', 13))
-        delete_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #d65858;
-                color: white;
-                border: none;
-                border-radius: 17px;
-                font-weight: bold;
-            }
-            QPushButton:hover { background-color: #dc2626; }
-        """)
+        delete_btn.setFixedSize(26, 26)
+        delete_btn.setFont(QFont('Segoe UI', 10))
+        # delete_btn.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: #ef4444;
+        #         color: white;
+        #         border: none;
+        #         border-radius: 13px;
+        #         font-weight: bold;
+        #     }
+        #     QPushButton:hover { background-color: #dc2626; }
+        # """)
         delete_btn.clicked.connect(lambda: self.delete_transaction(transaction['id']))
 
         layout.addWidget(recategorize_btn)
@@ -824,7 +820,7 @@ class TransactionListWidget(QWidget):
         layout.addStretch(1)
 
         widget.setLayout(layout)
-        widget.setMinimumHeight(50)
+        widget.setMinimumHeight(36)
         return widget
     
     def show_add_dialog(self):
