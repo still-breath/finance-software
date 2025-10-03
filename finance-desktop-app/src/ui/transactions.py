@@ -571,12 +571,18 @@ class TransactionListWidget(QWidget):
         
         # Set column widths
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
         header.setSectionResizeMode(4, QHeaderView.Fixed)
-        self.table.setColumnWidth(4, 120)
+        
+        self.table.setColumnWidth(0, 100)  # Date
+        self.table.setColumnWidth(2, 120)  # Amount
+        self.table.setColumnWidth(3, 150)  # Category
+        self.table.setColumnWidth(4, 130)  # Actions
+        
+        self.table.verticalHeader().setDefaultSectionSize(70)
         
         # Hide ID column
         self.table.setColumnHidden(5, True)
@@ -639,9 +645,10 @@ class TransactionListWidget(QWidget):
             }
             
             QTableWidget::item {
-                padding: 16px 12px;
+                padding: 22px 16px;
                 border-bottom: 1px solid #f1f5f9;
                 color: #2d3748;
+                min-height: 60px;
             }
             
             QTableWidget::item:selected {
@@ -728,9 +735,9 @@ class TransactionListWidget(QWidget):
             self.table.setItem(row, 2, amount_item)
             
             # Category
-            category_name = 'Uncategorized'
-            if transaction.get('category'):
-                category_name = transaction['category'].get('name', 'Unknown')
+            category_name = transaction.get('category_name', 'Uncategorized')
+            if not category_name or category_name == '':
+                category_name = 'Uncategorized'
             category_item = QTableWidgetItem(category_name)
             category_item.setFont(QFont('Segoe UI', 11))
             self.table.setItem(row, 3, category_item)
@@ -753,15 +760,16 @@ class TransactionListWidget(QWidget):
         layout.setSpacing(8)
         
         # Recategorize button (AI)
-        recategorize_btn = QPushButton('AI')
-        recategorize_btn.setFixedSize(50, 32)
-        recategorize_btn.setFont(QFont('Segoe UI', 10, QFont.Bold))
+        recategorize_btn = QPushButton('🤖 AI')
+        recategorize_btn.setFixedSize(55, 28)
+        recategorize_btn.setFont(QFont('Segoe UI', 9, QFont.Bold))
         recategorize_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
                     stop:0 #8b5cf6, stop:1 #6366f1);
                 color: white;
-                border-radius: 6px;
+                border-radius: 4px;
+                border: none;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
@@ -773,14 +781,15 @@ class TransactionListWidget(QWidget):
         )
         
         # Delete button
-        delete_btn = QPushButton('Delete')
-        delete_btn.setFixedSize(58, 32)
-        delete_btn.setFont(QFont('Segoe UI', 10, QFont.Medium))
+        delete_btn = QPushButton('🗑️')
+        delete_btn.setFixedSize(30, 28)
+        delete_btn.setFont(QFont('Segoe UI', 10))
         delete_btn.setStyleSheet("""
             QPushButton {
                 background-color: #fee2e2;
                 color: #dc2626;
-                border-radius: 6px;
+                border-radius: 4px;
+                border: none;
             }
             QPushButton:hover {
                 background-color: #fecaca;
@@ -795,6 +804,7 @@ class TransactionListWidget(QWidget):
         layout.addWidget(delete_btn)
         layout.addStretch()
         widget.setLayout(layout)
+        widget.setFixedHeight(60)
         
         return widget
     
