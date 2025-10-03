@@ -177,11 +177,24 @@ class APIClient:
         return self._make_request('GET', '/api/v1/categories/stats')
     
     def suggest_categories(self, description: str) -> Dict[str, Any]:
-        return self._make_request('GET', f'/api/v1/categories/suggest?description={description}')
+        if not description.strip():
+            return {"count": 0, "query": "", "suggestions": None}
+        
+        try:
+            # Use AI endpoint for intelligent category prediction
+            data = {"description": description.strip()}
+            return self._make_request('POST', '/api/v1/ai/test', data)
+        except Exception as e:
+            print(f"AI suggestion failed: {e}")
+            return {"count": 0, "query": description, "suggestions": None}
     
     def batch_recategorize(self, transaction_ids: list) -> Dict[str, Any]:
         data = {"transaction_ids": transaction_ids}
         return self._make_request('POST', '/api/v1/transactions/batch-recategorize', data)
+    
+    def create_category(self, name: str) -> Dict[str, Any]:
+        data = {"name": name}
+        return self._make_request('POST', '/api/v1/categories', data)
     
     def test_connection(self) -> bool:
         try:
