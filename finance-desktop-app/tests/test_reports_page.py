@@ -56,12 +56,12 @@ class TestReportsPage:
     def test_load_all_populates(self, app, mock_api):
         page = ReportsPage(mock_api)
         page.load_all()
-        # Check some labels updated
         assert 'Income:' in page.monthly_income_label.text()
         assert page.category_stats_layout.count() > 0
         assert page.ai_stats_layout.count() > 0
         assert page.top_categories_layout.count() > 0
         assert page.recent_summary_layout.count() > 0
+        assert page.trend_info_layout.count() >= 1
 
     def test_update_monthly_trends(self, app, mock_api):
         page = ReportsPage(mock_api)

@@ -49,7 +49,7 @@ class ReportsPage(QWidget):
         scroll.setWidget(content_widget)
         main_layout.addWidget(scroll)
     
-    # Card factories -------------------------------------------------
+    # Card factories
     def _card_frame(self):
         card = QFrame(); card.setFrameStyle(QFrame.NoFrame)
         card.setStyleSheet("QFrame{background:white;border-radius:12px;}")
@@ -103,16 +103,16 @@ class ReportsPage(QWidget):
         loading = QLabel("Loading recent activity..."); loading.setFont(QFont('Segoe UI',11)); loading.setStyleSheet("color:#6b7280;"); self.recent_summary_layout.addWidget(loading)
         layout.addStretch(); return card
     
-    # Data loading ---------------------------------------------------
+    # Data loading
     def load_all(self):
         try:
-            monthly_data = self.api_client.get_monthly_stats(); self.update_monthly_overview(monthly_data)
+            monthly_data = self.api_client.get_monthly_stats(); self.update_monthly_overview(monthly_data); self.update_monthly_trends(monthly_data)
             category_data = self.api_client.get_category_stats(); self.update_category_distribution(category_data); self.update_ai_stats(category_data); self.update_top_categories(category_data)
             tx_data = self.api_client.get_transactions(); self.update_recent_summary(tx_data)
         except Exception as e:
             log_app_event("reports_load_error", "ReportsPage", {"error": str(e)})
     
-    # Update helpers (copied & simplified from dashboard) -------------
+    # Update helpers
     def update_monthly_overview(self, data):
         try:
             stats = data.get('monthly_stats', [])
@@ -235,7 +235,7 @@ class ReportsPage(QWidget):
                 canvas=FigureCanvas(fig); self.trend_info_layout.addWidget(canvas)
             except Exception as chart_err:
                 err=QLabel(f"Chart error: {chart_err}"); err.setStyleSheet('color:#dc2626;'); self.trend_info_layout.addWidget(err)
-            # Table (last 6)
+            # Table
             html_rows=[]
             for r in cleaned[-6:]:
                 idx = cleaned.index(r); prev_bal = cleaned[idx-1]['balance'] if idx>0 else 0; delta = r['balance']-prev_bal if idx>0 else 0
