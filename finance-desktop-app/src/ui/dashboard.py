@@ -850,9 +850,8 @@ class DashboardWindow(QMainWindow):
             if page_name in page_map:
                 self.content_area.setCurrentIndex(page_map[page_name])
                 
-                # Load reports data when navigating to reports page
-                if page_name == 'reports':
-                    self.load_reports_data()
+                if page_name == 'reports' and hasattr(self, 'reports_page'):
+                    self.reports_page.load_all()
     
     def apply_styles(self):
         """Apply global styles"""
@@ -864,22 +863,12 @@ class DashboardWindow(QMainWindow):
     
     def load_dashboard_data(self):
         log_app_event("dashboard_data_load_started", "DashboardWindow")
-        
-        # Load transaction summary for metrics cards
         try:
             summary_data = self.api_client.get_transaction_summary()
             self.update_metrics_cards(summary_data)
         except Exception as e:
             log_app_event("dashboard_summary_error", "DashboardWindow", {"error": str(e)})
             print(f"Failed to load transaction summary: {e}")
-        
-        # Load monthly stats for charts
-        try:
-            monthly_data = self.api_client.get_monthly_stats()
-            self.update_charts_data(monthly_data)
-        except Exception as e:
-            log_app_event("dashboard_monthly_error", "DashboardWindow", {"error": str(e)})
-            print(f"Failed to load monthly stats: {e}")
     
     def update_metrics_cards(self, summary_data):
         """Update metrics cards with real data"""
@@ -908,118 +897,6 @@ class DashboardWindow(QMainWindow):
         except Exception as e:
             log_app_event("metrics_update_error", "DashboardWindow", {"error": str(e)})
     
-    def update_charts_data(self, monthly_data):
-        """Update charts with monthly data"""
-        try:
-            raw = []
-            if not monthly_data:
-                return
-            if 'monthly_stats' in monthly_data:
-                raw = monthly_data.get('monthly_stats', [])
-            elif 'months' in monthly_data:
-                raw = monthly_data.get('months', [])
-            else:
-                if isinstance(monthly_data, list):
-                    raw = monthly_data
-
-            cleaned = []
-            for item in raw:
-                month_key = item.get('month') or item.get('period') or item.get('date')
-                if not month_key:
-                    continue
-                # Accept formats YYYY-MM or YYYY-MM-DD
-                month_id = month_key[:7]
-                income = item.get('income') or item.get('total_income') or 0
-                expense = item.get('expense') or item.get('total_expense') or 0
-                balance = item.get('balance') or (income - abs(expense))
-                cleaned.append({
-                    'month': month_id,
-                    'income': float(income),
-                    'expense': float(expense),
-                    'balance': float(balance)
-                })
-
-            cleaned.sort(key=lambda x: x['month'])
-
-            for i, row in enumerate(cleaned):
-                if i == 0:
-                    row['income_delta'] = 0
-                    row['expense_delta'] = 0
-                    row['balance_delta'] = 0
-                else:
-                    prev = cleaned[i-1]
-                    row['income_delta'] = row['income'] - prev['income']
-                    row['expense_delta'] = row['expense'] - prev['expense']
-                    row['balance_delta'] = row['balance'] - prev['balance']
-
-            if cleaned:
-                highest_income = max(cleaned, key=lambda r: r['income'])
-                highest_expense = max(cleaned, key=lambda r: r['expense'])
-                latest = cleaned[-1]
-                trend_dir = 'up' if latest['balance_delta'] > 0 else ('flat' if latest['balance_delta'] == 0 else 'down')
-
-                while self.trend_info_layout.count():
-                    item = self.trend_info_layout.takeAt(0)
-                    w = item.widget()
-                    if w:
-                        w.deleteLater()
-                def fmt_month(m):
-                    try:
-                        year, month = m.split('-')
-                        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                        return f"{month_names[int(month)-1]} {year}"
-                    except Exception:
-                        return m
-                def colorize(val):
-                    if val > 0:
-                        return f"<span style='color:#059669'>+{val:,.0f}</span>"
-                    if val < 0:
-                        return f"<span style='color:#dc2626'>{val:,.0f}</span>"
-                    return f"<span style='color:#64748b'>0</span>"
-                # Build labels
-                summary_label = QLabel(f"Latest Month: <b>{fmt_month(latest['month'])}</b> Balance <b>IDR {latest['balance']:,.0f}</b> (Δ {colorize(latest['balance_delta'])})")
-                summary_label.setFont(QFont('Segoe UI', 11))
-                summary_label.setStyleSheet("color:#374151; margin-bottom:4px;")
-                self.trend_info_layout.addWidget(summary_label)
-
-                income_label = QLabel(f"Income: IDR {latest['income']:,.0f} (Δ {colorize(latest['income_delta'])}) – Highest: {fmt_month(highest_income['month'])} (IDR {highest_income['income']:,.0f})")
-                income_label.setFont(QFont('Segoe UI', 10))
-                income_label.setStyleSheet("color:#1d4ed8; margin:2px 0;")
-                self.trend_info_layout.addWidget(income_label)
-
-                expense_label = QLabel(f"Expenses: IDR {latest['expense']:,.0f} (Δ {colorize(latest['expense_delta'])}) – Peak: {fmt_month(highest_expense['month'])} (IDR {highest_expense['expense']:,.0f})")
-                expense_label.setFont(QFont('Segoe UI', 10))
-                expense_label.setStyleSheet("color:#dc2626; margin:2px 0;")
-                self.trend_info_layout.addWidget(expense_label)
-
-                direction_map = {'up': ('📈 Improving balance', '#059669'), 'down': ('📉 Declining balance', '#dc2626'), 'flat': ('➖ Stable balance', '#64748b')}
-                dir_text, dir_color = direction_map[trend_dir]
-                dir_label = QLabel(dir_text)
-                dir_label.setFont(QFont('Segoe UI', 10, QFont.Bold))
-                dir_label.setStyleSheet(f"color:{dir_color}; margin-top:6px;")
-                self.trend_info_layout.addWidget(dir_label)
-
-                # Optional compact table style summary (raw rows)
-                html_rows = []
-                for r in cleaned[-6:]:
-                    html_rows.append(
-                        f"<tr><td style='padding:2px 8px'>{fmt_month(r['month'])}</td>"
-                        f"<td style='padding:2px 8px;text-align:right'>{r['income']:,.0f}</td>"
-                        f"<td style='padding:2px 8px;text-align:right'>{r['expense']:,.0f}</td>"
-                        f"<td style='padding:2px 8px;text-align:right'>{r['balance']:,.0f}</td>" 
-                        f"<td style='padding:2px 8px;text-align:right'>{'+' if r['balance_delta']>0 else ''}{r['balance_delta']:,.0f}</td></tr>"
-                    )
-                table_label = QLabel(
-                    "<div style='margin-top:8px'><b>Recent 6 Months</b><br><table style='border-collapse:collapse;font-size:11px;color:#374151'>"
-                    "<tr style='background:#f1f5f9'><th style='padding:2px 8px;text-align:left'>Month</th><th style='padding:2px 8px'>Income</th><th style='padding:2px 8px'>Expense</th><th style='padding:2px 8px'>Balance</th><th style='padding:2px 8px'>Δ Bal</th></tr>"
-                    + "".join(html_rows) + "</table></div>"
-                )
-                table_label.setTextFormat(Qt.RichText)
-                self.trend_info_layout.addWidget(table_label)
-
-            log_app_event("charts_data_loaded", "DashboardWindow", {"months": len(cleaned)})
-        except Exception as e:
-            log_app_event("charts_update_error", "DashboardWindow", {"error": str(e)})
     
     def create_monthly_overview_card(self):
         """Create monthly overview summary card"""
