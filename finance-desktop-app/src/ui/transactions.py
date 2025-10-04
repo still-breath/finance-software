@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
                            QTableWidgetItem, QMessageBox, QComboBox, QDateEdit,
                            QDoubleSpinBox, QHeaderView, QAbstractItemView, QMenu, QAction,
                            QDialog, QShortcut)
-from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal, QTimer, QEvent
 from PyQt5.QtGui import QFont, QColor, QKeySequence
 import sys
 import os
@@ -519,8 +519,11 @@ class TransactionListWidget(QWidget):
         super().__init__(parent)
         self.api_client = api_client
         self.transactions = []
+        self.filtered_transactions = []
         self.categories = []
         self.worker = None
+        self.search_bar = None
+        self.search_visible = False
         self.initUI()
         self.load_categories()
         self.load_transactions()
@@ -556,8 +559,16 @@ class TransactionListWidget(QWidget):
         
         header_layout.addWidget(self.refresh_btn)
         header_layout.addWidget(self.add_btn)
-        
         layout.addLayout(header_layout)
+
+        # Search bar (hidden initially)
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("Search (description or category) – Ctrl+F to toggle, Esc to close")
+        self.search_bar.setFixedHeight(40)
+        self.search_bar.setVisible(False)
+        self.search_bar.textChanged.connect(self.apply_filter)
+        self.search_bar.installEventFilter(self)
+        layout.addWidget(self.search_bar)
         
         # Transaction table
         self.table = QTableWidget()
@@ -605,6 +616,10 @@ class TransactionListWidget(QWidget):
         self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
         self.shortcut_new.setContext(Qt.ApplicationShortcut)
         self.shortcut_new.activated.connect(self._shortcut_new_triggered)
+
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.setContext(Qt.ApplicationShortcut)
+        self.shortcut_search.activated.connect(self.toggle_search)
         
         layout.addWidget(self.table)
         
@@ -733,6 +748,7 @@ class TransactionListWidget(QWidget):
         """Handle successful load"""
         self.set_loading(False)
         self.transactions = result.get('transactions', []) or []
+        self.filtered_transactions = self.transactions
         self.populate_table()
         log_user_action("transactions_loaded", "TransactionListWidget", 
                        {"count": len(self.transactions)})
@@ -743,11 +759,10 @@ class TransactionListWidget(QWidget):
         QMessageBox.critical(self, 'Error', f'Failed to load transactions: {error_message}')
     
     def populate_table(self):
-        """Populate transaction table with data"""
+        data = self.filtered_transactions if self.filtered_transactions is not None else self.transactions
         self.table.setSortingEnabled(False)
-        self.table.setRowCount(len(self.transactions))
-        
-        for row, transaction in enumerate(self.transactions):
+        self.table.setRowCount(len(data))
+        for row, transaction in enumerate(data):
             # Date
             date_str = transaction.get('transaction_date', '')[:10]
             date_item = QTableWidgetItem(date_str)
@@ -795,6 +810,30 @@ class TransactionListWidget(QWidget):
             self.table.setItem(row, 5, id_item)
         
         self.table.setSortingEnabled(True)
+
+    def apply_filter(self):
+        term = self.search_bar.text().strip().lower()
+        if not term:
+            self.filtered_transactions = self.transactions
+        else:
+            self.filtered_transactions = [t for t in self.transactions if term in (t.get('description','').lower()) or term in (t.get('category_name','') or '').lower()]
+        self.populate_table()
+
+    def toggle_search(self):
+        self.search_visible = not self.search_visible
+        self.search_bar.setVisible(self.search_visible)
+        if self.search_visible:
+            self.search_bar.setFocus()
+        else:
+            self.search_bar.clear()
+        log_user_action("toggle_search", "TransactionListWidget", {"visible": self.search_visible})
+
+    def eventFilter(self, obj, event):
+        if obj == self.search_bar and event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Escape and self.search_visible:
+                self.toggle_search()
+                return True
+        return super().eventFilter(obj, event)
     
     def create_action_buttons(self, transaction):
         widget = QWidget()
@@ -941,6 +980,10 @@ class TransactionListWidget(QWidget):
                 self.show_add_dialog()
                 event.accept()
                 return
+            if event.key() == Qt.Key_f:
+                self.toggle_search()
+                event.accept()
+                return
         super().keyPressEvent(event)
 
     def _shortcut_refresh_triggered(self):
@@ -952,6 +995,7 @@ class TransactionListWidget(QWidget):
         log_user_action("shortcut_new", "TransactionListWidget")
         if self.add_btn.isEnabled():
             self.show_add_dialog()
+
 
     # ----- Sorting helpers -----
     def on_header_clicked(self, section: int):
