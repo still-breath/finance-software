@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
                            QLineEdit, QPushButton, QLabel, QTableWidget, 
                            QTableWidgetItem, QMessageBox, QComboBox, QDateEdit,
                            QDoubleSpinBox, QHeaderView, QAbstractItemView, QMenu, QAction,
-                           QDialog)
+                           QDialog, QShortcut)
 from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal, QTimer
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QColor, QKeySequence
 import sys
 import os
 from datetime import datetime, date
@@ -464,8 +464,6 @@ class AddTransactionDialog(QDialog):
                 )
                 
         except Exception as e:
-            # If creation fails, it might already exist in database but not in our local list
-            # Refresh categories and try to find it
             self.refresh_categories_and_select(sanitized_name)
     
     def refresh_categories_and_select(self, category_name: str):
@@ -491,7 +489,6 @@ class AddTransactionDialog(QDialog):
                         )
                         return
             
-            # Still not found, show fallback message
             self.ai_suggestion_label.setText(
                 f"🤖 AI suggests: {category_name} (will be created when you save)"
             )
@@ -596,9 +593,18 @@ class TransactionListWidget(QWidget):
         self.table.setSortingEnabled(True)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
-        # Custom sort indicator handling (must be after header configured)
+
         header.sectionClicked.connect(self.on_header_clicked)
         self.sort_state = {"section": None, "order": Qt.AscendingOrder}
+
+        # Shortcuts with application-wide context for reliability
+        self.shortcut_refresh = QShortcut(QKeySequence("Ctrl+R"), self)
+        self.shortcut_refresh.setContext(Qt.ApplicationShortcut)
+        self.shortcut_refresh.activated.connect(self._shortcut_refresh_triggered)
+
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.setContext(Qt.ApplicationShortcut)
+        self.shortcut_new.activated.connect(self._shortcut_new_triggered)
         
         layout.addWidget(self.table)
         
@@ -919,6 +925,33 @@ class TransactionListWidget(QWidget):
             self.refresh_btn.setText('Loading...')
         else:
             self.refresh_btn.setText('Refresh')
+
+    # ----- Keyboard shortcuts -----
+    def keyPressEvent(self, event):
+        """
+        Ctrl+R -> Refresh transactions
+        Ctrl+N -> Open add transaction dialog
+        """
+        if event.modifiers() & Qt.ControlModifier:
+            if event.key() == Qt.Key_r and self.refresh_btn.isEnabled():
+                self.load_transactions()
+                event.accept()
+                return
+            if event.key() == Qt.Key_n and self.add_btn.isEnabled():
+                self.show_add_dialog()
+                event.accept()
+                return
+        super().keyPressEvent(event)
+
+    def _shortcut_refresh_triggered(self):
+        log_user_action("shortcut_refresh", "TransactionListWidget")
+        if self.refresh_btn.isEnabled():
+            self.load_transactions()
+
+    def _shortcut_new_triggered(self):
+        log_user_action("shortcut_new", "TransactionListWidget")
+        if self.add_btn.isEnabled():
+            self.show_add_dialog()
 
     # ----- Sorting helpers -----
     def on_header_clicked(self, section: int):
