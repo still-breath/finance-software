@@ -524,6 +524,11 @@ class TransactionListWidget(QWidget):
         self.worker = None
         self.search_bar = None
         self.search_visible = False
+        # Refresh debounce/cooldown
+        self.refresh_cooldown_ms = 800
+        self._refresh_cooldown_timer = QTimer(self)
+        self._refresh_cooldown_timer.setSingleShot(True)
+        self._refresh_cooldown_timer.timeout.connect(self._end_refresh_cooldown)
         self.initUI()
         self.load_categories()
         self.load_transactions()
@@ -733,16 +738,18 @@ class TransactionListWidget(QWidget):
     
     def load_transactions(self):
         """Load transactions from backend"""
-        log_user_action("load_transactions", "TransactionListWidget")
-        
-        # Disable controls during loading
-        self.set_loading(True)
-        
-        # Start load operation in background
-        self.worker = TransactionWorker(self.api_client, 'load')
-        self.worker.success.connect(self.on_load_success)
-        self.worker.error.connect(self.on_load_error)
-        self.worker.start()
+        if self.refresh_btn.isEnabled():
+            log_user_action("load_transactions", "TransactionListWidget")
+            self.set_loading(True)
+
+            self.worker = TransactionWorker(self.api_client, 'load')
+            self.worker.success.connect(self.on_load_success)
+            self.worker.error.connect(self.on_load_error)
+            self.worker.start()
+
+            self._begin_refresh_cooldown()
+        else:
+            log_user_action("refresh_debounced", "TransactionListWidget")
     
     def on_load_success(self, result):
         """Handle successful load"""
@@ -957,7 +964,7 @@ class TransactionListWidget(QWidget):
     def set_loading(self, loading: bool):
         """Set loading state"""
         self.add_btn.setEnabled(not loading)
-        self.refresh_btn.setEnabled(not loading)
+        self.refresh_btn.setEnabled((not loading) and (not self._refresh_cooldown_timer.isActive()))
         self.table.setEnabled(not loading)
         
         if loading:
@@ -988,8 +995,16 @@ class TransactionListWidget(QWidget):
 
     def _shortcut_refresh_triggered(self):
         log_user_action("shortcut_refresh", "TransactionListWidget")
-        if self.refresh_btn.isEnabled():
-            self.load_transactions()
+        self.load_transactions()
+    def _begin_refresh_cooldown(self):
+        if not self._refresh_cooldown_timer.isActive():
+            self._refresh_cooldown_timer.start(self.refresh_cooldown_ms)
+
+    def _end_refresh_cooldown(self):
+        # Only re-enable if not currently loading
+        if self.refresh_btn.text() != 'Loading...':
+            self.refresh_btn.setEnabled(True)
+        log_user_action("refresh_cooldown_end", "TransactionListWidget")
 
     def _shortcut_new_triggered(self):
         log_user_action("shortcut_new", "TransactionListWidget")
