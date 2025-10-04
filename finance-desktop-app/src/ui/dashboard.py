@@ -187,43 +187,137 @@ class DashboardWindow(QMainWindow):
             }
         """)
         
-        sidebar_layout = QVBoxLayout(self.sidebar)
-        sidebar_layout.setSpacing(0)
-        sidebar_layout.setContentsMargins(0, 0, 0, 0)
+        self.sidebar_layout = QVBoxLayout(self.sidebar)
+        self.sidebar_layout.setSpacing(0)
+        self.sidebar_layout.setContentsMargins(0, 0, 0, 0)
         
-        # User profile section
         user_container = QWidget()
-        user_container.setStyleSheet("background-color: #34495e; border-bottom: 1px solid #1a252f;")
+        user_container.setObjectName("user_container")
+        user_container.setStyleSheet("""
+            QWidget#user_container { 
+                background-color: #34495e; 
+            }
+        """)
         user_layout = QVBoxLayout(user_container)
-        user_layout.setSpacing(5)
-        user_layout.setContentsMargins(15, 15, 15, 15)
-        
-        # Avatar
-        avatar_label = QLabel('👤')
-        avatar_label.setFont(QFont('Open Sans', 32))
-        avatar_label.setAlignment(Qt.AlignCenter)
-        avatar_label.setStyleSheet("color: white;")
-        
-        user_layout.addWidget(avatar_label)
-        
-        # User name
-        user_name = QLabel(self.user_data.get('name', 'User').upper())
-        user_name.setFont(QFont('Open Sans', 14, QFont.Bold))
-        user_name.setStyleSheet("color: white;")
-        user_name.setAlignment(Qt.AlignCenter)
-        
-        # User email
-        user_email = QLabel(self.user_data.get('email', 'user@example.com'))
-        user_email.setFont(QFont('Open Sans', 10))
-        user_email.setStyleSheet("color: #95a5a6;")
-        user_email.setAlignment(Qt.AlignCenter)
-        
-        user_layout.addWidget(user_name)
-        user_layout.addWidget(user_email)
-        
-        sidebar_layout.addWidget(user_container)
-        
-        # Navigation items
+        user_layout.setSpacing(10)
+        user_layout.setContentsMargins(18, 18, 18, 18)
+
+        full_name = self.user_data.get('name') or self.user_data.get('username') or 'User'
+        name_parts = [p for p in (full_name.strip().split()) if p]
+        initials = ''.join([p[0].upper() for p in name_parts[:2]]) if name_parts else 'U'
+
+        avatar_wrapper = QWidget()
+        avatar_layout = QHBoxLayout(avatar_wrapper)
+        avatar_layout.setContentsMargins(0,0,0,0)
+        avatar_layout.setAlignment(Qt.AlignCenter)
+        self.avatar_label = QLabel(initials)
+        self.avatar_label.setFixedSize(68, 68)
+        self.avatar_label.setAlignment(Qt.AlignCenter)
+        self.avatar_label.setFont(QFont('Open Sans', 26, QFont.Bold))
+        self.avatar_label.setStyleSheet("""
+            QLabel { 
+                color: #ecf0f1; 
+                letter-spacing: 1px; 
+            }
+        """)
+        avatar_layout.addWidget(self.avatar_label)
+        user_layout.addWidget(avatar_wrapper, 0, Qt.AlignCenter)
+
+        # Proper case name
+        display_name = ' '.join([w.capitalize() for w in name_parts]) if name_parts else 'User'
+        self.user_name_label = QLabel(display_name)
+        self.user_name_label.setFont(QFont('Open Sans', 14, QFont.DemiBold))
+        self.user_name_label.setAlignment(Qt.AlignCenter)
+        self.user_name_label.setStyleSheet("color: #ffffff; letter-spacing: 0.5px;")
+        user_layout.addWidget(self.user_name_label)
+
+        raw_email = self.user_data.get('email') or self.user_data.get('username') or 'user@example.com'
+        email_display = raw_email
+        if len(raw_email) > 28:
+            email_display = raw_email[:12] + '…' + raw_email[-12:]
+        self.user_email_label = QLabel(email_display)
+        self.user_email_label.setFont(QFont('Open Sans', 10))
+        self.user_email_label.setAlignment(Qt.AlignCenter)
+        self.user_email_label.setStyleSheet("color: #95a5a6;")
+        self.user_email_label.setToolTip(raw_email)
+        user_layout.addWidget(self.user_email_label)
+
+        self.user_role_label = QLabel("")
+        self.user_role_label.setFont(QFont('Open Sans', 9))
+        self.user_role_label.setAlignment(Qt.AlignCenter)
+        self.user_role_label.setStyleSheet("color: #7f8c8d;")
+        self.user_role_label.setVisible(False)
+        user_layout.addWidget(self.user_role_label)
+
+        self.refresh_profile_btn = QPushButton("↻ Refresh Profile")
+        self.refresh_profile_btn.setCursor(Qt.PointingHandCursor)
+        self.refresh_profile_btn.setFixedHeight(30)
+        self.refresh_profile_btn.setStyleSheet("""
+            QPushButton { 
+                background: #3b5366; 
+                color: #d0d7dd; 
+                border: 1px solid #3f5a6f; 
+                border-radius: 6px; 
+                font-size: 11px; 
+                font-weight: 500; 
+                padding: 4px 10px; 
+            }
+            QPushButton:hover { background:#46617a; color:#ffffff; }
+            QPushButton:pressed { background:#3a5269; }
+        """)
+        self.refresh_profile_btn.clicked.connect(self.refresh_profile_data)
+        user_layout.addWidget(self.refresh_profile_btn, 0, Qt.AlignCenter)
+
+        self.sidebar_layout.addWidget(user_container)
+        self._init_nav_list(self.sidebar_layout)
+
+        # Logout button
+        self.logout_btn = QPushButton('🚪  Logout')
+        self.logout_btn.setFont(QFont('Open Sans', 12))
+        self.logout_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #95a5a6;
+                border: none;
+                padding: 18px 25px;
+                text-align: left;
+            }
+            QPushButton:hover {
+                background-color: #34495e;
+                color: white;
+            }
+        """)
+        self.logout_btn.clicked.connect(self.logout)
+        self.sidebar_layout.addWidget(self.logout_btn)
+
+    def refresh_profile_data(self):
+        """Fetch latest user profile from backend and update UI"""
+        try:
+            profile = self.api_client.get_user_profile() or {}
+            data = profile.get('data') if isinstance(profile, dict) and 'data' in profile else profile
+            if not isinstance(data, dict):
+                return
+            name = data.get('name') or data.get('username') or 'User'
+            name_parts = [p for p in name.strip().split() if p]
+            initials = ''.join([p[0].upper() for p in name_parts[:2]]) if name_parts else 'U'
+            display_name = ' '.join([w.capitalize() for w in name_parts]) if name_parts else 'User'
+            self.avatar_label.setText(initials)
+            self.user_name_label.setText(display_name)
+            email_val = data.get('email') or data.get('username') or 'user@example.com'
+            if len(email_val) > 28:
+                email_display = email_val[:12] + '…' + email_val[-12:]
+            else:
+                email_display = email_val
+            self.user_email_label.setText(email_display)
+            self.user_email_label.setToolTip(email_val)
+            role = data.get('role') or data.get('user_role')
+            if role:
+                self.user_role_label.setText(role.title())
+                self.user_role_label.setVisible(True)
+        except Exception as e:
+            pass
+
+    def _init_nav_list(self, sidebar_layout):
         self.nav_list = QListWidget()
         self.nav_list.setFrameStyle(QFrame.NoFrame)
         self.nav_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -250,7 +344,6 @@ class DashboardWindow(QMainWindow):
                 color: white;
             }
         """)
-        
         nav_items = [
             ('🏠  Dashboard', 'overview'),
             ('�  Transactions', 'transactions'),
@@ -259,33 +352,14 @@ class DashboardWindow(QMainWindow):
             ('📍  Location', 'location'),
             ('📊  Reports', 'reports')
         ]
-        
         for text, data in nav_items:
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, data)
             item.setFont(QFont('Open Sans', 13))
             self.nav_list.addItem(item)
-        
         sidebar_layout.addWidget(self.nav_list)
         
-        # Logout button
-        self.logout_btn = QPushButton('🚪  Logout')
-        self.logout_btn.setFont(QFont('Open Sans', 12))
-        self.logout_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #95a5a6;
-                border: none;
-                padding: 18px 25px;
-                text-align: left;
-            }
-            QPushButton:hover {
-                background-color: #34495e;
-                color: white;
-            }
-        """)
-        self.logout_btn.clicked.connect(self.logout)
-        sidebar_layout.addWidget(self.logout_btn)
+        
     
     def create_header(self):
         """Create header with title"""
