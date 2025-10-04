@@ -596,6 +596,9 @@ class TransactionListWidget(QWidget):
         self.table.setSortingEnabled(True)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        # Custom sort indicator handling (must be after header configured)
+        header.sectionClicked.connect(self.on_header_clicked)
+        self.sort_state = {"section": None, "order": Qt.AscendingOrder}
         
         layout.addWidget(self.table)
         
@@ -916,3 +919,39 @@ class TransactionListWidget(QWidget):
             self.refresh_btn.setText('Loading...')
         else:
             self.refresh_btn.setText('Refresh')
+
+    # ----- Sorting helpers -----
+    def on_header_clicked(self, section: int):
+        current_section = self.sort_state.get("section")
+        if current_section == section:
+            new_order = Qt.DescendingOrder if self.sort_state.get("order") == Qt.AscendingOrder else Qt.AscendingOrder
+        else:
+            new_order = Qt.AscendingOrder
+        self.sort_state = {"section": section, "order": new_order}
+        self.table.sortItems(section, new_order)
+        self.update_sort_indicators()
+
+    def update_sort_indicators(self):
+        header = self.table.horizontalHeader()
+        active_section = self.sort_state.get("section")
+        order = self.sort_state.get("order")
+        arrow_up = ""
+        arrow_down = ""
+        for col in range(self.table.columnCount()):
+            item_text = self.table.horizontalHeaderItem(col).text().split(" ")
+
+            if item_text and item_text[-1] in (arrow_up, arrow_down):
+                item_text = item_text[:-1]
+            base = " ".join(item_text)
+            if col == active_section:
+                arrow = arrow_up if order == Qt.AscendingOrder else arrow_down
+                self.table.horizontalHeaderItem(col).setText(f"{base} {arrow}")
+
+                font = self.table.horizontalHeaderItem(col).font()
+                font.setBold(True)
+                self.table.horizontalHeaderItem(col).setFont(font)
+            else:
+                self.table.horizontalHeaderItem(col).setText(base)
+                font = self.table.horizontalHeaderItem(col).font()
+                font.setBold(False)
+                self.table.horizontalHeaderItem(col).setFont(font)
