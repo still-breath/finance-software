@@ -231,7 +231,10 @@ class ReportsPage(QWidget):
                 fig = Figure(figsize=(4,2.2)); ax = fig.add_subplot(111)
                 labels=[fmt_month(r['month']) for r in cleaned]; balances=[r['balance'] for r in cleaned]
                 ax.plot(labels, balances, marker='o', linewidth=2, color='#6366f1'); ax.fill_between(range(len(balances)), balances, color='#6366f1', alpha=0.08)
-                ax.set_ylabel('Balance (IDR)'); ax.set_xticklabels(labels, rotation=30, ha='right', fontsize=8); ax.grid(axis='y', linestyle='--', alpha=0.3); fig.tight_layout()
+                ax.set_ylabel('Balance (IDR)')
+                ax.set_xticklabels(labels, rotation=0, ha='center', fontsize=9)
+                ax.grid(axis='y', linestyle='--', alpha=0.3)
+                fig.tight_layout()
                 canvas=FigureCanvas(fig); self.trend_info_layout.addWidget(canvas)
             except Exception as chart_err:
                 err=QLabel(f"Chart error: {chart_err}"); err.setStyleSheet('color:#dc2626;'); self.trend_info_layout.addWidget(err)
