@@ -1,8 +1,7 @@
 <div align="center">
-<h1>💰 FINANCE APP - PERSONAL FINANCE MANAGEMENT SYSTEM</h1>
-<a href="https://github.com/still-breath/finance-app-golang.git">
-    <img src="./thumbnail.png" height="300" alt="finance-app-dashboard">
-</a>
+<h1>💰 FINANCE DESKTOP APP</h1>
+<h3>Personal Finance Management System with AI Categorization</h3>
+<a href="#preview"><img src="./thumbnail.png" height="280" alt="finance-app-dashboard"></a>
 </div>
 
 <p align="center">
@@ -13,38 +12,50 @@
 </p>
 
 <div align="center">
-<h2>🔒 SECURITY NOTICE</h2>
-<p><strong>⚠️ This repository requires proper setup before use!</strong></p>
-<p>📖 <strong>Read <a href="SETUP.md">SETUP.md</a> for security configuration instructions</strong></p>
-<p>🚫 <strong>Fresh clone will NOT run without proper setup</strong></p>
+<h2>🔒 SECURITY / ENV SETUP</h2>
+<p><strong>⚠️ Set required environment variables before running backend.</strong></p>
+<p>� Minimal: <code>JWT_SECRET</code> · <code>DATABASE_DSN</code> · <code>AI_SERVICE_URL</code></p>
+<p>�️ See <code>docker-compose.yml</code> & <code>init.sql</code> for DB context.</p>
 </div>
 
 <p align="center">
-<a href="#-introduction">Introduction</a> &nbsp;&bull;&nbsp;
-<a href="#-tech-stack">Tech Stack</a> &nbsp;&bull;&nbsp;
-<a href="#-preview">Preview</a> &nbsp;&bull;&nbsp;
-<a href="#-installation--usage">Installation & Usage</a> &nbsp;&bull;&nbsp;
-<a href="#-api-endpoints">API Endpoints</a> &nbsp;&bull;&nbsp;
-<a href="#-ai-model-training">AI Model Training</a> &nbsp;&bull;&nbsp;
-<a href="#-issue">Issue</a>&nbsp;&bull;&nbsp;
-<a href="#-license">License</a>&nbsp;&bull;&nbsp;
+<a href="#-introduction--pendahuluan">Introduction</a> &nbsp;•&nbsp;
+<a href="#-tech-stack">Tech Stack</a> &nbsp;•&nbsp;
+<a href="#-preview">Preview</a> &nbsp;•&nbsp;
+<a href="#-installation--usage">Install & Run</a> &nbsp;•&nbsp;
+<a href="#-api-endpoints-core">API</a> &nbsp;•&nbsp;
+<a href="#-ai-model-training">AI Training</a> &nbsp;•&nbsp;
+<a href="#-issues--kontribusi">Issues</a> &nbsp;•&nbsp;
+<a href="#-license">License</a> &nbsp;•&nbsp;
 <a href="#-author">Author</a>
 </p>
 
 ---
 
-## 📄 Introduction
+## 📄 Introduction / Pendahuluan
 
-This project is a **full-stack personal finance management application** that helps you track your income and expenses with intelligent categorization. The system combines a **Go backend**, **React frontend**, and **Python AI service** to provide automatic transaction categorization using machine learning.
+EN: A modern, container-friendly personal finance system. Primary interface is a **PyQt5 desktop app** powered by a **Go REST API** and a **Python AI categorizer** (ML + fallback keyword rules). Tracks income, expenses, categories, trends, and gives AI-based suggestions.
+
+ID: Aplikasi manajemen keuangan pribadi dengan fokus **desktop PyQt5**. Backend Go (REST API + statistik). Layanan AI Python memberi saran kategori otomatis (model ML + fallback kata kunci). Mendukung pencatatan, laporan, tren bulanan, dan re-kategorisasi.
+
+### Ecosystem
+- 🖥️ PyQt5 Desktop (utama)
+- 🧠 Python AI Categorizer (`categorizer-ai-service`)
+- 🚀 Go Backend API (`finance-backend-go`)
+- (Opsional / Legacy) React frontend (tidak diprioritaskan)
 
 ### 🎯 Key Features
-- **User Authentication**: Secure registration and login system
-- **Transaction Management**: Add, edit, delete, and categorize transactions
-- **AI-Powered Categorization**: Automatic transaction categorization using machine learning
-- **Real-time Dashboard**: Summary of financial situation with interactive charts
-- **Responsive Design**: Works seamlessly on mobile and desktop devices
-- **RESTful API**: Well-documented API with Swagger integration
-- **Containerized Deployment**: Easy deployment using Docker and Docker Compose
+| Area | Highlights |
+|------|-----------|
+| Auth | JWT login/register (desktop uses `/api/v1/auth/*`) |
+| Transactions | CRUD, batch recategorize, create categories |
+| AI | Logistic Regression TF‑IDF + keyword fallback, confidence score |
+| Reports | Monthly & summary stats (`/api/v1/stats/*`) |
+| UX | Ctrl+N/R/F, styled calendar, debounced search |
+| Architecture | Go + Python + PyQt5, Docker ready |
+| Resilience | Graceful AI fallback (no model → keyword) |
+
+> If model files (`models/model.pkl`, `models/vectorizer.pkl`) missing, system uses keyword rules.
 
 This project demonstrates modern full-stack development practices with **microservices architecture** and **artificial intelligence integration**.
 
@@ -55,17 +66,12 @@ This project demonstrates modern full-stack development practices with **microse
 Frameworks, Libraries, and Tools used in this project:
 
 <p align="center">
-<a target="_blank" href="https://reactjs.org/">
-<img height="30" src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
+<a target="_blank" href="https://www.riverbankcomputing.com/static/Docs/PyQt5/">
+<img height="30" src="https://img.shields.io/badge/PyQt5-41CD52?style=for-the-badge&logo=qt&logoColor=white" alt="PyQt5"/>
 </a>
-<a target="_blank" href="https://www.typescriptlang.org/">
-<img height="30" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
+<a target="_blank" href="https://matplotlib.org/">
+<img height="30" src="https://img.shields.io/badge/Matplotlib-11557c?style=for-the-badge&logo=plotly&logoColor=white" alt="Matplotlib"/>
 </a>
-<a target="_blank" href="https://tailwindcss.com/">
-<img height="30" src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"/>
-</a>
-<a target="_blank" href="https://vitejs.dev/">
-<img height="30" src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite"/>
 </a>
 </p>
 
@@ -75,9 +81,6 @@ Frameworks, Libraries, and Tools used in this project:
 </a>
 <a target="_blank" href="https://www.python.org/">
 <img height="30" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-</a>
-<a target="_blank" href="https://flask.palletsprojects.com/">
-<img height="30" src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask"/>
 </a>
 </p>
 
@@ -101,36 +104,39 @@ Frameworks, Libraries, and Tools used in this project:
 <img src="./preview.png" alt="Finance App Dashboard" width="80%">
 </div>
 
-### 📊 Dashboard Features
-- **Financial Overview**: Real-time summary of income, expenses, and balance
-- **Recent Transactions**: Latest transactions with automatic categorization
-- **Category Insights**: Spending breakdown by categories
-- **Interactive Charts**: Visual representation of financial data
+### 🧩 Desktop Dashboard Highlights
+- Financial Overview Cards (Income, Transactions, Categories, Averages)
+- Monthly Trends Line Chart (horizontal x-axis labels)
+- Last 6 Months Compact Table
+- AI Suggestion Banner in Add Transaction dialog
+- Styled Calendar (red weekends, white theme)
 
-### 🎯 Key Capabilities
-- **Smart Categorization**: AI automatically categorizes transactions (Health, Education, Shopping, etc.)
-- **Multi-language Support**: Indonesian language interface support
-- **Real-time Updates**: Live dashboard updates without page refresh
-- **Responsive Design**: Optimized for all device sizes
+### ➕ Additional Capabilities
+- Smart Categorization (Health, Education, Food, Shopping, etc.)
+- Indonesian language support
+- Keyboard Shortcuts (Ctrl+R refresh, Ctrl+N add, Ctrl+F search)
+- Optimized Debounced Refresh
+- Desktop-first UX (no browser required for main client)
 
-### 📈 Performance Metrics
-- **Response Time**: <200ms API response time
-- **AI Accuracy**: 95%+ categorization accuracy
-- **Uptime**: 99.9% availability with Docker deployment
-- **Load Capacity**: Handles 1000+ concurrent users
+### 📈 Indicative Targets (Local Dev)
+- API latency: < 200 ms
+- Model accuracy (sample data): ~90–95%
+- Cold start desktop: < 2s (after services up)
+
+> Actual metrics depend on dataset & environment.
 
 ---
 
 ## ⚙️ Installation & Usage
 
 ### 📋 Prerequisites
-- Docker and Docker Compose
-- Git
-- Node.js 18+ (for local development)
-- Go 1.19+ (for local development)
-- Python 3.10+ (for local development)
+Needed for Desktop + Backend + AI:
+1. Docker & Docker Compose (recommended)
+2. Go 1.23+ (if not using docker for backend)
+3. Python 3.10+ (AI + desktop)
+4. Node.js 18+ (optional legacy frontend)
 
-### 🔧 Step-by-Step Installation
+### 🔧 Step-by-Step Installation (All Services)
 
 #### 1. Clone Repository
 ```bash
@@ -139,170 +145,166 @@ git clone https://github.com/still-breath/finance-app-golang.git
 cd finance-app-golang
 ```
 
-#### 2. Environment Configuration
-```bash
-# Create environment file from template
-cp .env.example .env
-
-# Edit environment variables
-nano .env
+#### 2. Environment Variables
+Create `.env`:
+```env
+JWT_SECRET=replace_with_strong_secret
+DATABASE_DSN=postgres://postgres:postgres@db:5432/finance_db?sslmode=disable
+AI_SERVICE_URL=http://categorizer-ai:5000
+PORT=8080
+```
+Local (no docker):
+```env
+DATABASE_DSN=host=localhost user=postgres password=postgres dbname=finance_db port=5432 sslmode=disable
+AI_SERVICE_URL=http://localhost:5000
 ```
 
-#### 3. Docker Deployment (Recommended)
+#### 3. Run with Docker
 ```bash
-# Build and start all services
 docker-compose up --build
-
-# Run in background
+# or
 docker-compose up -d --build
-
-# Start frontend website
-npm run dev
 ```
+Starts: PostgreSQL · Go API · AI service. Run desktop separately.
 
-#### 4. Local Development Setup
+#### 4. Local Dev (Manual)
 ```bash
-# Install backend dependencies
+# Backend
 cd finance-backend-go
 go mod download
+go run .
 
-# Install frontend dependencies
-cd ../finance-frontend
-npm install
-
-# Install AI service dependencies
+# AI Service
 cd ../categorizer-ai-service
 pip install -r requirements.txt
+python app.py
+
+# (Optional) Train / retrain
+python ../train.py
+
+# Desktop (new shell)
+python finance-desktop-app/main.py
 ```
 
-### 🚀 Usage
+### 🚀 Usage (Desktop)
 
-#### Access the Application:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8080
-- **AI Service**: http://localhost:5000
-- **API Documentation**: http://localhost:8080/swagger/index.html
+#### Access Summary
+| Component | URL / Command |
+|-----------|---------------|
+| Desktop (PyQt5) | `python finance-desktop-app/main.py` |
+| Backend API | http://localhost:8080 |
+| Backend Health | http://localhost:8080/health |
+| AI Service | http://localhost:5000/health |
+| Legacy React (optional) | http://localhost:5173 |
 
-#### Using the Application:
-1. **Register/Login**: Create an account or log in
-2. **Add Transactions**: Record your income and expenses
-3. **View Dashboard**: Monitor your financial overview
-4. **Analyze Spending**: Review categorized expenses
-5. **Track Trends**: Use charts to understand spending patterns
+#### Using the Desktop Application:
+1. Start Backend & AI (Docker or local)
+2. Run Desktop App: `python finance-desktop-app/main.py`
+3. Login / Register
+4. Add Transactions (Ctrl+N)
+5. Refresh / Search (Ctrl+R / Ctrl+F)
+6. Open Reports tab for charts & 6‑month summary
 
-### 📁 Project Structure
+### 📁 Project Structure (Simplified)
 ```
-finance-app/
-├── categorizer-ai-service/    # Python AI service for transaction categorization
-│   ├── app.py                # Flask application
-│   ├── model_training.py     # ML model training script
-│   ├── Dockerfile           # Docker build instructions
-│   ├── requirements.txt      # Python dependencies
-│ML model training script
-│   └── requirements.txt      # Python dependencies
-├── data/                     # Training data for AI model
-├── finance-backend-go/       # Go backend service
-│   ├── controllers/          # API controllers
-│   ├── Dockerfile           # Docker build instructions
-│   ├── main.go              # Main application
-│   ├── ai_client.go         # AI service client
-│   ├── additional_handlers.go  # Additional handlers
-│   ├── database.go              # database.go extension
-│   ├── handlers.go              # handlers.go extension
-│   ├── models.go              # Models for backend
-│   ├── transaction_handlers.go  # Handlers for transaction feature
-├── finance-frontend/         # React frontend application
-│   ├── src/                 # Source code
-│   ├── public/              # Static assets
-│   └── package.json         # Node.js dependencies
-├── models/                   # Trained AI models
-├── docker-compose.yml        # Docker services configuration
-├── init.sql                  # Database initialization
+finance-software/
+├── categorizer-ai-service/    # Flask AI service (/categorize, /health)
+│   ├── app.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── models/
+├── data/                      # training_data.xlsx
+├── finance-backend-go/        # Go API (/api/v1/...)
+│   ├── main.go
+│   ├── ai_client.go
+│   ├── transaction_handlers.go
+│   ├── additional_handlers.go
+│   ├── handlers.go
+│   ├── models.go
+│   └── database.go
+├── finance-desktop-app/       # PyQt5 desktop client
+│   ├── main.py
+│   ├── src/api/client.py
+│   ├── src/ui/*
+│   └── tests/*
+├── models/                    # Alternate model artifact location
+├── train.py                   # Training script
+├── docker-compose.yml
+├── init.sql
 └── README.md
 ```
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Endpoints (Core)
 
-### 🔐 Authentication Endpoints
+### 🔐 Auth
 ```bash
-POST /api/auth/register      # User registration
-POST /api/auth/login         # User login
-POST /api/auth/logout        # User logout
-GET  /api/auth/profile       # Get user profile
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/profile
 ```
 
-### 💳 Transaction Endpoints
+### 💳 Transactions
 ```bash
-GET    /api/transactions         # Get all transactions
-POST   /api/transactions         # Create new transaction
-GET    /api/transactions/:id     # Get transaction by ID
-PUT    /api/transactions/:id     # Update transaction
-DELETE /api/transactions/:id     # Delete transaction
+GET    /api/v1/transactions
+POST   /api/v1/transactions
+GET    /api/v1/transactions/:id
+PUT    /api/v1/transactions/:id
+DELETE /api/v1/transactions/:id
+PUT    /api/v1/transactions/:id/recategorize
+POST   /api/v1/transactions/batch-recategorize
 ```
 
-### 📊 Analytics Endpoints
+### 📊 Stats & Categories
 ```bash
-GET /api/analytics/summary       # Financial summary
-GET /api/analytics/categories    # Category breakdown
-GET /api/analytics/trends        # Spending trends
+GET /api/v1/stats/summary
+GET /api/v1/stats/monthly
+GET /api/v1/categories
+POST /api/v1/categories
+GET /api/v1/categories/stats
+GET /api/v1/categories/suggest   # (if implemented)
 ```
 
-### 🤖 AI Service Endpoints
+### 🤖 AI Service (Direct)
 ```bash
-POST /categorize                 # Categorize transaction description
-GET  /health                     # Service health check
+POST /categorize
+POST /categorize/batch
+GET  /health
 ```
 
-### 📖 API Documentation
-Complete API documentation is available at: http://localhost:8080/swagger/index.html
+> Swagger not exposed yet (only /health). Add gin-swagger if needed.
 
 ---
 
 ## 🧠 AI Model Training
 
-### 📚 Training Data
-The AI model is trained on transaction data located in `data/training_data.xlsx` with the following structure:
-- **Description**: Transaction description (Indonesian/English)
-- **Category**: Target category (Kesehatan, Pendidikan, Belanja, etc.)
+### 📚 Dataset
+File: `data/training_data.xlsx` → columns: `description`, `category`.
 
-### 🔄 Retraining the Model
-
-#### Using Docker (Recommended):
+### 🔄 Retrain
 ```bash
-# Retrain the model with new data
+# Docker
 docker-compose run --rm categorizer-ai python train.py
-
-# Restart AI service to load new model
 docker-compose restart categorizer-ai
+
+# Local
+python train.py         # writes models/*.pkl
 ```
+Artifacts:
+- models/model.pkl
+- models/vectorizer.pkl
+- models/metadata.pkl
 
-#### Local Training:
-```bash
-# Navigate to AI service directory
-cd categorizer-ai-service
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Train the model
-python train.py
-
-# New model files will be created:
-# - models/model.pkl (trained classifier)
-# - models/vectorizer.pkl (text vectorizer)
-```
-
-### 🎯 Model Performance
-- **Algorithm**: Support Vector Machine (SVM) with TF-IDF vectorization
-- **Accuracy**: 95%+ on test data
-- **Categories**: Health, Education, Shopping, Entertainment, Food, Transportation, etc.
-- **Languages**: Supports Indonesian and English descriptions
+### 🎯 Model Notes
+- Logistic Regression TF‑IDF (unigram+bigram)
+- Accuracy depends on dataset balance
+- Indo + English mixed supported
+- Keyword fallback ensures resilience
 
 ---
 
-## 🚩 Issue
+## 🚩 Issues / Kontribusi
 
 If you encounter bugs or have problems, please report them by opening a **new issue** in this repository.
 
@@ -314,22 +316,21 @@ When reporting issues, please include:
 - Error logs (if any)
 - Screenshots (for UI issues)
 
-### 🔍 Common Issues and Solutions
+### 🔍 Troubleshooting
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| 401 Unauthorized | Missing / expired JWT | Re-login (desktop auto-handles token) |
+| AI fallback only | model/vectorizer missing | Run training; ensure files in `categorizer-ai-service/models/` |
+| DB init errors | Wrong DSN / container not ready | Check Postgres logs; confirm `DATABASE_DSN` |
+| Slow first classify | Cold model load | Subsequent calls faster |
+| No GUI on remote | No display server | Use local machine / X11 forwarding |
 
-#### Docker Issues:
-- **Port conflicts**: Change ports in docker-compose.yml
-- **Build failures**: Run `docker-compose down -v` then rebuild
-- **Database connection**: Check PostgreSQL container status
-
-#### Frontend Issues:
-- **Build errors**: Clear npm cache with `npm cache clean --force`
-- **API connection**: Verify backend service is running
-- **Style issues**: Check Tailwind CSS configuration
-
-#### AI Service Issues:
-- **Model loading errors**: Ensure model files exist in models/ directory
-- **Categorization accuracy**: Retrain model with more diverse data
-- **Performance**: Consider using more powerful ML algorithms
+### Enhancement Ideas
+- Add Swagger (`gin-swagger`)
+- Budget planning & alerts
+- PyInstaller packaging for desktop
+- gRPC or async AI service
+- Multi-user role & audit logs
 
 ---
 
@@ -343,7 +344,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 <div align="center">
 <h3>🧑‍💻 Syahrul Fathoni Ahmad</h3>
-<p><em>Full Stack Developer | AI Enthusiast | Financial Technology Researcher</em></p>
+<p><em>Full Stack Developer | AI Engineer | Financial Technology Researcher</em></p>
 
 <p>
 <a target="_blank" href="https://www.linkedin.com/in/syahrulahmad/">
@@ -361,6 +362,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 <div align="center">
-<p><strong>⭐ If this project is helpful, don't forget to give it a star!</strong></p>
-<p><em>Created with ❤️ for better personal financial management and AI-powered fintech solutions</em></p>
+<p><strong>⭐ Star this repo if helpful!</strong></p>
+<p><em>Built for pragmatic personal finance + ML experimentation.</em></p>
 </div>
