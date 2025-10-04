@@ -538,7 +538,7 @@ class TransactionListWidget(QWidget):
         header_layout = QHBoxLayout()
         header_layout.setSpacing(15)
         
-        title = QLabel('Transactions')
+        title = QLabel('Transaction List')
         title.setFont(QFont('Segoe UI', 26, QFont.Bold))
         title.setStyleSheet("color: #1a202c;")
         
@@ -577,7 +577,6 @@ class TransactionListWidget(QWidget):
         header.setSectionResizeMode(3, QHeaderView.Fixed)
         header.setSectionResizeMode(4, QHeaderView.Fixed)
         
-        # Adjusted column widths: wider date & amount
         self.table.setColumnWidth(0, 150)  # Date
         self.table.setColumnWidth(2, 170)  # Amount
         self.table.setColumnWidth(3, 160)  # Category
@@ -606,7 +605,6 @@ class TransactionListWidget(QWidget):
         # Apply styling
         self.setStyleSheet("""
             QWidget {
-                background-color: #f8fafc;
                 font-family: 'Segoe UI', Arial, sans-serif;
             }
             
@@ -646,24 +644,14 @@ class TransactionListWidget(QWidget):
                 selection-background-color: #e0e7ff;
                 gridline-color: transparent;
             }
+
+            QTableWidget QWidget { background: transparent; }
             
             QTableWidget::item {
                 padding: 12px 14px;
                 border-bottom: 1px solid #f1f5f9;
                 color: #2d3748;
                 min-height: 40px;
-            }
-            
-            /* Date column - smaller font */
-            QTableWidget::item:nth-child(1) {
-                font-size: 11px;
-                font-weight: 600;
-            }
-            
-            /* Amount column - better formatting */
-            QTableWidget::item:nth-child(3) {
-                font-weight: 600;
-                text-align: right;
             }
             
             QTableWidget::item:selected {
@@ -685,6 +673,29 @@ class TransactionListWidget(QWidget):
             
             QTableWidget::item:alternate {
                 background-color: #f8fafc;
+            }
+            QHeaderView {
+                background-color: #f8fafc;
+            }
+            QHeaderView::section {
+                background-color: #f8fafc;
+                color: #475569;
+                padding: 14px 12px;
+                border: none;
+                border-bottom: 2px solid #e2e8f0;
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            QHeaderView::section:horizontal {
+                border-right: 1px solid #e2e8f0;
+            }
+            QTableCornerButton::section {
+                background-color: #f8fafc;
+                border: none;
+                border-bottom: 2px solid #e2e8f0;
+                border-right: 1px solid #e2e8f0;
             }
         """)
     
@@ -778,49 +789,46 @@ class TransactionListWidget(QWidget):
     
     def create_action_buttons(self, transaction):
         widget = QWidget()
-        layout = QHBoxLayout()
-        layout.setContentsMargins(2, 4, 2, 4)
+        widget.setAttribute(Qt.WA_StyledBackground, True)
+        widget.setStyleSheet("background: transparent;")
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
         layout.addStretch(1)
 
+        btn_style = """
+            QPushButton {
+                border: none;
+                background: transparent;
+                font-weight: 600;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background: rgba(99,102,241,0.10);
+                border-radius: 6px;
+            }
+        """
+
         recategorize_btn = QPushButton('🤖')
         recategorize_btn.setToolTip('Recategorize with AI')
-        recategorize_btn.setFixedSize(26, 26)
-        recategorize_btn.setFont(QFont('Segoe UI', 10))
-        # recategorize_btn.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: #6366f1;
-        #         color: white;
-        #         border: none;
-        #         border-radius: 13px;
-        #         font-weight: bold;
-        #     }
-        #     QPushButton:hover { background-color: #4f46e5; }
-        # """)
+        recategorize_btn.setFixedSize(34, 34)
+        recategorize_btn.setFont(QFont('Segoe UI', 16))
+        recategorize_btn.setStyleSheet(btn_style)
+        recategorize_btn.setCursor(Qt.PointingHandCursor)
         recategorize_btn.clicked.connect(lambda: self.recategorize_transaction(transaction['id']))
 
         delete_btn = QPushButton('🗑️')
         delete_btn.setToolTip('Delete transaction')
-        delete_btn.setFixedSize(26, 26)
-        delete_btn.setFont(QFont('Segoe UI', 10))
-        # delete_btn.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: #ef4444;
-        #         color: white;
-        #         border: none;
-        #         border-radius: 13px;
-        #         font-weight: bold;
-        #     }
-        #     QPushButton:hover { background-color: #dc2626; }
-        # """)
+        delete_btn.setFixedSize(34, 34)
+        delete_btn.setFont(QFont('Segoe UI', 16))
+        delete_btn.setStyleSheet(btn_style)
+        delete_btn.setCursor(Qt.PointingHandCursor)
         delete_btn.clicked.connect(lambda: self.delete_transaction(transaction['id']))
 
         layout.addWidget(recategorize_btn)
         layout.addWidget(delete_btn)
         layout.addStretch(1)
-
-        widget.setLayout(layout)
-        widget.setMinimumHeight(36)
+        widget.setMinimumHeight(40)
         return widget
     
     def show_add_dialog(self):

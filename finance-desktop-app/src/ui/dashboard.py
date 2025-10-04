@@ -289,11 +289,11 @@ class DashboardWindow(QMainWindow):
     def create_header(self):
         """Create header with title"""
         self.header_widget = QWidget()
-        self.header_widget.setFixedHeight(60)
+        self.header_widget.setFixedHeight(70)
         self.header_widget.setStyleSheet("""
             QWidget {
                 background-color: white;
-                border-radius: 12px;
+                border-radius: 14px;
             }
         """)
         
@@ -306,13 +306,12 @@ class DashboardWindow(QMainWindow):
         self.header_widget.setGraphicsEffect(shadow)
         
         header_layout = QHBoxLayout(self.header_widget)
-        header_layout.setContentsMargins(30, 20, 30, 20)
+        header_layout.setContentsMargins(24, 12, 24, 12)
         
         # Title
         self.page_title = QLabel('Dashboard')
         self.page_title.setFont(QFont('Open Sans', 22, QFont.Bold))
         self.page_title.setStyleSheet("color: #2c3e50;")
-        
         header_layout.addWidget(self.page_title)
         header_layout.addStretch()
     
