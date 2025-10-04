@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from api.client import APIClient
 from utils.logger import log_user_action, log_app_event, log_window_event
 from .transactions import TransactionListWidget
+from .reports import ReportsPage
 
 class MetricCard(QFrame):
     """Custom metric card widget"""
@@ -326,7 +327,7 @@ class DashboardWindow(QMainWindow):
         self.messages_page = self.create_placeholder_page('✉️ Messages', 'Messaging features coming soon')
         self.notifications_page = self.create_placeholder_page('🔔 Notifications', 'Notifications coming soon')
         self.location_page = self.create_placeholder_page('📍 Location', 'Location features coming soon')
-        self.reports_page = self.create_reports_page()
+        self.reports_page = ReportsPage(self.api_client)
         
         # Add pages
         self.content_area.addWidget(self.overview_page)
