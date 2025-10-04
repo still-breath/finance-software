@@ -7,13 +7,14 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
                            QLineEdit, QPushButton, QLabel, QTableWidget, 
                            QTableWidgetItem, QMessageBox, QComboBox, QDateEdit,
                            QDoubleSpinBox, QHeaderView, QAbstractItemView, QMenu, QAction,
-                           QDialog, QShortcut)
+                           QDialog, QShortcut, QCalendarWidget)
 from PyQt5.QtCore import Qt, QDate, QThread, pyqtSignal, QTimer, QEvent
-from PyQt5.QtGui import QFont, QColor, QKeySequence
+from PyQt5.QtGui import QFont, QColor, QKeySequence, QTextCharFormat
 import sys
 import os
 from datetime import datetime, date
 from typing import Dict, List, Any, Optional
+
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -175,6 +176,9 @@ class AddTransactionDialog(QDialog):
         self.date_edit.setFont(QFont('Segoe UI', 12))
         self.date_edit.setFixedHeight(45)
         self.date_edit.setDisplayFormat('dd MMMM yyyy')
+        # Prepare calendar styling flag (for popup QCalendarWidget styling)
+        self._calendar_styled = False
+        self.date_edit.installEventFilter(self)
         
         date_layout.addWidget(date_label)
         date_layout.addWidget(self.date_edit)
@@ -303,7 +307,67 @@ class AddTransactionDialog(QDialog):
                 background-color: #e2e8f0;
                 color: #334155;
             }
+            QCalendarWidget QWidget#qt_calendar_navigationbar { background: #ffffff; }
+            QCalendarWidget QToolButton { color: #1a202c; font-weight:600; background: transparent; }
+            QCalendarWidget QToolButton:hover { background:#edf2f7; border-radius:4px; }
+            QCalendarWidget QToolButton::menu-indicator { image: none; width:0; }
+            QMenu { 
+                background: #ffffff; 
+                border: 1px solid #e2e8f0; 
+                padding: 6px 0; 
+                border-radius: 8px; 
+            }
+            QMenu::item { 
+                background: transparent; 
+                padding: 6px 18px; 
+                color: #1a202c; 
+                font-family: 'Segoe UI'; 
+                font-size: 13px; 
+            }
+            QMenu::item:selected { 
+                background: #edf2f7; 
+                color: #1a202c; 
+            }
+            QMenu::separator { height:1px; background:#e2e8f0; margin:4px 0; }
+            QCalendarWidget QAbstractItemView { 
+                background: #ffffff; 
+                selection-background-color: #3182ce; 
+                selection-color: #ffffff; 
+                outline: none; 
+                gridline-color: #e2e8f0; 
+            }
+            /* Week headers */
+            QCalendarWidget QTableView { alternate-background-color:#ffffff; }
         """)
+
+    def eventFilter(self, obj, event):
+        if obj is self.date_edit and event.type() == QEvent.Show and not self._calendar_styled:
+            popup = self.date_edit.findChild(QWidget, "qt_calendar_popup")
+            if popup:
+                cal_widget = popup.findChild(QCalendarWidget)
+                if cal_widget:
+                    cal_widget.setStyleSheet(
+                        """
+                        QCalendarWidget QWidget#qt_calendar_navigationbar { background: #ffffff; }
+                        QCalendarWidget QToolButton { color: #1a202c; font-weight:600; background: transparent; }
+                        QCalendarWidget QToolButton:hover { background:#edf2f7; border-radius:4px; }
+                        QCalendarWidget QToolButton::menu-indicator { image: none; width:0; }
+                        QMenu { background:#ffffff; border:1px solid #e2e8f0; padding:6px 0; border-radius:8px; }
+                        QMenu::item { background:transparent; padding:6px 18px; color:#1a202c; font-family:'Segoe UI'; font-size:13px; }
+                        QMenu::item:selected { background:#edf2f7; color:#1a202c; }
+                        QMenu::separator { height:1px; background:#e2e8f0; margin:4px 0; }
+                        QCalendarWidget QAbstractItemView { background:#ffffff; selection-background-color:#3182ce; selection-color:#ffffff; outline:none; }
+                        QCalendarWidget QTableView { alternate-background-color:#ffffff; }
+                        """
+                    )
+
+                    fmt_weekend = QTextCharFormat()
+                    fmt_weekend.setForeground(QColor('#dc2626'))
+                    cal_widget.setWeekdayTextFormat(Qt.Saturday, fmt_weekend)
+                    cal_widget.setWeekdayTextFormat(Qt.Sunday, fmt_weekend)
+            self._calendar_styled = True
+        return super().eventFilter(obj, event)
+        
     
     def save_transaction(self):
         """Save new transaction"""
@@ -979,15 +1043,15 @@ class TransactionListWidget(QWidget):
         Ctrl+N -> Open add transaction dialog
         """
         if event.modifiers() & Qt.ControlModifier:
-            if event.key() == Qt.Key_r and self.refresh_btn.isEnabled():
+            if event.key() == Qt.Key_R and self.refresh_btn.isEnabled():
                 self.load_transactions()
                 event.accept()
                 return
-            if event.key() == Qt.Key_n and self.add_btn.isEnabled():
+            if event.key() == Qt.Key_N and self.add_btn.isEnabled():
                 self.show_add_dialog()
                 event.accept()
                 return
-            if event.key() == Qt.Key_f:
+            if event.key() == Qt.Key_F:
                 self.toggle_search()
                 event.accept()
                 return
