@@ -150,19 +150,16 @@ class MainWindow(QWidget):
                 font-weight: 600;
                 padding: 15px 30px;
                 font-size: 14px;
-                transition: all 0.3s;
             }
             
             QPushButton#primary_btn {
                 background-color: #007bff;
                 color: white;
                 font-size: 16px;
-                box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
             }
             
             QPushButton#primary_btn:hover {
                 background-color: #0056b3;
-                box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
                 padding: 15px 35px;
             }
             
@@ -180,7 +177,6 @@ class MainWindow(QWidget):
             QPushButton#secondary_btn:hover {
                 background-color: #007bff;
                 color: white;
-                box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
             }
             
             QPushButton#secondary_btn:pressed {
